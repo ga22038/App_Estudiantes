@@ -1,100 +1,125 @@
-/* ================================
-   Tokens visuales
-================================ */
+/* ============================================================
+   Ant Design 5 — Design Tokens
+   ============================================================ */
 :root {
-  --app-bg: #f3f7fd;
-  --panel-bg: rgba(255, 255, 255, 0.92);
-  --panel-border: rgba(19, 65, 145, 0.08);
-  --panel-shadow: 0 22px 60px rgba(18, 52, 110, 0.12);
-  --hero-shadow: 0 28px 70px rgba(13, 54, 123, 0.18);
-  --text-strong: #10264d;
-  --text-body: #486183;
-  --text-soft: #6d82a3;
-  --brand: #1768ff;
-  --brand-dark: #114cc0;
-  --brand-soft: rgba(23, 104, 255, 0.1);
-  --success: #12805c;
-  --warning: #d38b07;
-  --danger: #c53b38;
-  --neutral: #475467;
-  --radius-xl: 28px;
-  --radius-lg: 20px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-  --surface-gap: 1.35rem;
+  --ant-primary:          #1677ff;
+  --ant-primary-hover:    #4096ff;
+  --ant-primary-dark:     #0958d9;
+  --ant-primary-bg:       #e6f4ff;
+  --ant-primary-border:   #91caff;
+
+  --ant-success:          #52c41a;
+  --ant-success-bg:       #f6ffed;
+  --ant-success-border:   #b7eb8f;
+  --ant-success-text:     #389e0d;
+
+  --ant-warning:          #faad14;
+  --ant-warning-bg:       #fffbe6;
+  --ant-warning-border:   #ffe58f;
+  --ant-warning-text:     #d48806;
+
+  --ant-error:            #ff4d4f;
+  --ant-error-bg:         #fff1f0;
+  --ant-error-border:     #ffa39e;
+  --ant-error-text:       #cf1322;
+
+  --ant-text:             rgba(0, 0, 0, 0.88);
+  --ant-text-secondary:   rgba(0, 0, 0, 0.65);
+  --ant-text-tertiary:    rgba(0, 0, 0, 0.45);
+
+  --ant-bg-layout:        #f0f2f5;
+  --ant-bg-container:     #ffffff;
+  --ant-bg-spot:          #fafafa;
+
+  --ant-border:           #d9d9d9;
+  --ant-border-secondary: #f0f0f0;
+
+  --ant-radius-xs:  4px;
+  --ant-radius-sm:  6px;
+  --ant-radius:     8px;
+  --ant-radius-lg: 12px;
+
+  --ant-shadow-sm: 0 1px 2px rgba(0,0,0,.03), 0 1px 6px -1px rgba(0,0,0,.02), 0 2px 4px rgba(0,0,0,.02);
+  --ant-shadow:    0 3px 6px -4px rgba(0,0,0,.12), 0 6px 16px rgba(0,0,0,.08), 0 9px 28px 8px rgba(0,0,0,.05);
+
+  --ant-motion-fast: 0.1s;
+  --ant-motion:      0.2s;
 }
 
-/* ================================
-   Base global
-================================ */
-html,
-body {
-  min-height: 100%;
-}
+/* ============================================================
+   Base reset
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
 
 body {
   margin: 0;
-  font-family: "Manrope", "Segoe UI", sans-serif;
-  color: var(--text-strong);
-  background:
-    radial-gradient(circle at top left, rgba(35, 111, 255, 0.22), transparent 28%),
-    radial-gradient(circle at top right, rgba(93, 173, 255, 0.18), transparent 26%),
-    linear-gradient(180deg, #edf3ff 0%, #f7faff 55%, #eef3fb 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+               'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5714;
+  color: var(--ant-text);
+  background: var(--ant-bg-layout);
 }
 
-body.modal-is-open {
-  overflow: hidden;
-}
+button, input, select, textarea { font: inherit; }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-strong {
-  font-weight: 800;
-}
-
-.noscript-banner {
-  margin: 1rem;
-  padding: 1rem 1.25rem;
-  border-radius: 16px;
-  background: #fff7e6;
-  color: #8a5a00;
-  border: 1px solid rgba(211, 139, 7, 0.26);
-}
+strong { font-weight: 600; }
 
 .app-shell {
   max-width: 1520px;
+  padding: 24px;
+  margin: 0 auto;
 }
 
-/* ================================
-   Hero principal
-================================ */
+/* ============================================================
+   Noscript
+   ============================================================ */
+.noscript-banner {
+  margin: 16px;
+  padding: 12px 16px;
+  border-radius: var(--ant-radius-sm);
+  background: var(--ant-warning-bg);
+  border: 1px solid var(--ant-warning-border);
+  font-size: 14px;
+}
+
+/* ============================================================
+   Hero banner (Ant Design Pro — page header con gradiente)
+   ============================================================ */
 .hero-panel {
   position: relative;
   overflow: hidden;
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-  border-radius: var(--radius-xl);
-  background:
-    linear-gradient(135deg, rgba(17, 76, 192, 0.96), rgba(38, 129, 255, 0.88)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-  box-shadow: var(--hero-shadow);
-  color: #ffffff;
-  animation: rise-in 0.6s ease;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  border-radius: var(--ant-radius-lg);
+  background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
+  color: #fff;
+}
+
+/* Círculos decorativos sutiles */
+.hero-panel::before {
+  content: '';
+  position: absolute;
+  right: -40px;
+  top: -80px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  pointer-events: none;
 }
 
 .hero-panel::after {
-  content: "";
+  content: '';
   position: absolute;
-  inset: auto -8% -35% auto;
-  width: 340px;
-  height: 340px;
+  right: 80px;
+  top: 50px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.24), transparent 68%);
+  background: rgba(255,255,255,.05);
   pointer-events: none;
 }
 
@@ -102,541 +127,620 @@ strong {
 .modal-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.8rem;
+  gap: 6px;
+  padding: 2px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.96);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.hero-chip {
+  background: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.95);
+  border: 1px solid rgba(255,255,255,.25);
 }
 
 .hero-title {
-  margin: 1rem 0 0.75rem;
-  font-size: clamp(2rem, 3vw, 3.4rem);
-  font-weight: 800;
-  line-height: 1.02;
-  max-width: 12ch;
+  margin: 12px 0 8px;
+  font-size: clamp(22px, 2.4vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
 }
 
 .hero-copy {
-  max-width: 62ch;
   margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 1.02rem;
-  line-height: 1.75;
+  color: rgba(255,255,255,.82);
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 56ch;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.9rem;
-  margin-top: 1.5rem;
+  gap: 10px;
+  margin-top: 20px;
 }
 
+/* Panel lateral del hero — "Estado de la sesion" */
 .hero-side-panel {
-  padding: 1.25rem;
-  border-radius: var(--radius-lg);
-  background: rgba(7, 29, 76, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
+  padding: 16px 20px;
+  border-radius: var(--ant-radius);
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.16);
+  backdrop-filter: blur(8px);
 }
 
 .hero-side-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.9rem;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .hero-side-label {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
 }
 
-.hero-meta-list {
-  display: grid;
-  gap: 0.75rem;
-}
+.hero-meta-list { display: grid; gap: 10px; }
 
 .hero-meta-item {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
 }
 
-.hero-meta-item:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
+.hero-meta-item:last-child { padding-bottom: 0; border-bottom: none; }
 
-.hero-meta-label {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.9rem;
-}
+.hero-meta-label { color: rgba(255,255,255,.72); font-size: 13px; }
 
-.hero-meta-value {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #ffffff;
-}
+.hero-meta-value { font-size: 14px; font-weight: 700; color: #fff; }
 
 .hero-side-note {
-  margin: 1rem 0 0;
-  color: rgba(255, 255, 255, 0.74);
+  margin: 12px 0 0;
+  color: rgba(255,255,255,.65);
+  font-size: 12px;
   line-height: 1.6;
-  font-size: 0.92rem;
 }
 
-/* ================================
-   Paneles y superficies
-================================ */
-.panel-surface {
-  padding: 1.35rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  box-shadow: var(--panel-shadow);
-  backdrop-filter: blur(16px);
-}
-
-.panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.1rem;
-}
-
-.panel-title {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--text-strong);
-}
-
-.panel-copy {
-  margin: 0.35rem 0 0;
-  color: var(--text-body);
-  line-height: 1.65;
-  font-size: 0.95rem;
-}
-
-/* ================================
-   Dashboard
-================================ */
+/* ============================================================
+   Dashboard — Metric cards (Ant Design Statistic)
+   ============================================================ */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .metric-card {
-  display: grid;
-  gap: 0.25rem;
-  padding: 1.25rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(23, 104, 255, 0.08);
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 18px 36px rgba(30, 60, 114, 0.08);
-  animation: rise-in 0.65s ease;
+  position: relative;
+  overflow: hidden;
+  background: var(--ant-bg-container);
+  border: 1px solid var(--ant-border-secondary);
+  border-radius: var(--ant-radius);
+  padding: 20px 24px;
+  box-shadow: var(--ant-shadow-sm);
+  transition: box-shadow var(--ant-motion);
 }
 
+.metric-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+
+/* Barra de color superior por posición */
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--ant-radius) var(--ant-radius) 0 0;
+}
+
+.metric-card:nth-child(1)::before { background: #1677ff; }
+.metric-card:nth-child(2)::before { background: #52c41a; }
+.metric-card:nth-child(3)::before { background: #ff4d4f; }
+.metric-card:nth-child(4)::before { background: #722ed1; }
+.metric-card:nth-child(5)::before { background: #fa8c16; }
+.metric-card:nth-child(6)::before { background: #13c2c2; }
+
 .metric-label {
-  font-size: 0.92rem;
-  color: var(--text-soft);
-  font-weight: 700;
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ant-text-secondary);
+  margin-bottom: 10px;
 }
 
 .metric-value {
-  font-size: 2rem;
+  display: block;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ant-text);
   line-height: 1;
-  font-weight: 800;
-  color: var(--text-strong);
+  margin-bottom: 4px;
 }
 
 .metric-note {
-  color: var(--text-body);
-  font-size: 0.85rem;
+  display: block;
+  font-size: 12px;
+  color: var(--ant-text-tertiary);
 }
 
-/* ================================
+/* ============================================================
    Layout central
-================================ */
+   ============================================================ */
 .workspace-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(300px, 0.9fr);
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+  gap: 20px;
 }
 
 .workspace-main,
 .workspace-side {
   display: grid;
-  gap: 1.5rem;
+  gap: 20px;
+  align-content: start;
 }
 
+/* ============================================================
+   Feedback / alertas (Ant Design Alert)
+   ============================================================ */
 .feedback-stack {
   display: grid;
-  gap: 0.8rem;
-  margin-bottom: 1.3rem;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .app-alert {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
-  border-radius: 16px;
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 14px 28px rgba(17, 34, 68, 0.08);
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: var(--ant-radius-sm);
+  border: 1px solid var(--ant-border-secondary);
+  background: var(--ant-bg-container);
+  box-shadow: var(--ant-shadow-sm);
+  animation: slide-down var(--ant-motion) ease;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .app-alert strong {
   display: block;
-  margin-bottom: 0.15rem;
-  font-size: 0.96rem;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .app-alert p {
-  margin: 0;
-  color: var(--text-body);
-  line-height: 1.55;
-  font-size: 0.92rem;
+  margin: 2px 0 0;
+  color: var(--ant-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .app-alert[data-tone="success"] {
-  border-color: rgba(18, 128, 92, 0.18);
-  background: rgba(236, 250, 245, 0.92);
+  border-color: var(--ant-success-border);
+  background: var(--ant-success-bg);
 }
+.app-alert[data-tone="success"] strong { color: var(--ant-success-text); }
 
 .app-alert[data-tone="warning"] {
-  border-color: rgba(211, 139, 7, 0.18);
-  background: rgba(255, 248, 233, 0.92);
+  border-color: var(--ant-warning-border);
+  background: var(--ant-warning-bg);
 }
+.app-alert[data-tone="warning"] strong { color: var(--ant-warning-text); }
 
 .app-alert[data-tone="error"] {
-  border-color: rgba(197, 59, 56, 0.18);
-  background: rgba(254, 243, 242, 0.94);
+  border-color: var(--ant-error-border);
+  background: var(--ant-error-bg);
+}
+.app-alert[data-tone="error"] strong { color: var(--ant-error-text); }
+
+/* ============================================================
+   Cards / Panel surfaces (Ant Design Card)
+   ============================================================ */
+.panel-surface {
+  background: var(--ant-bg-container);
+  border: 1px solid var(--ant-border-secondary);
+  border-radius: var(--ant-radius);
+  box-shadow: var(--ant-shadow-sm);
+  overflow: hidden;
 }
 
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ant-border-secondary);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ant-text);
+  line-height: 1.4;
+}
+
+.panel-copy {
+  margin: 3px 0 0;
+  color: var(--ant-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Grids de filtros dentro del card */
+.panel-surface > .row {
+  padding: 16px 12px 0;
+}
+
+/* ============================================================
+   Filtros
+   ============================================================ */
 .filter-summary-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 20px;
+  border-top: 1px solid var(--ant-border-secondary);
+  background: var(--ant-bg-spot);
 }
 
 .results-summary {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ant-text);
 }
 
 .filter-helper-text {
-  color: var(--text-soft);
-  font-size: 0.9rem;
+  font-size: 12px;
+  color: var(--ant-text-tertiary);
 }
 
-/* ================================
-   Tabla principal
-================================ */
+/* ============================================================
+   Tabla principal (Ant Design Table)
+   ============================================================ */
 .app-table-wrap {
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(15, 46, 110, 0.08);
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .app-table {
-  margin-bottom: 0;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
 .app-table thead th {
-  padding: 1rem 1rem;
-  border-bottom: 1px solid rgba(19, 65, 145, 0.1);
-  background: rgba(240, 246, 255, 0.9);
-  color: #1b3d78;
-  font-weight: 800;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  padding: 12px 16px;
+  background: var(--ant-bg-spot);
+  border-bottom: 1px solid var(--ant-border-secondary);
+  color: var(--ant-text);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .app-table tbody td {
-  padding: 1rem;
-  border-bottom: 1px solid rgba(19, 65, 145, 0.08);
-  color: var(--text-body);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ant-border-secondary);
+  color: var(--ant-text);
   vertical-align: middle;
+  font-size: 14px;
 }
 
-.app-table tbody tr:last-child td {
-  border-bottom: 0;
-}
+.app-table tbody tr:last-child td { border-bottom: none; }
 
-.app-table tbody tr:hover {
-  background: rgba(23, 104, 255, 0.03);
-}
+.app-table tbody tr:hover td { background: rgba(0,0,0,.02); }
 
 .student-name {
-  display: grid;
-  gap: 0.18rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .student-name strong {
-  font-size: 0.98rem;
-  color: var(--text-strong);
+  font-weight: 500;
+  color: var(--ant-text);
 }
 
 .student-name span,
 .cell-muted {
-  color: var(--text-soft);
-  font-size: 0.88rem;
+  font-size: 12px;
+  color: var(--ant-text-tertiary);
 }
 
+/* Status tags — Ant Design Tag style */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 92px;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 800;
+  padding: 1px 8px;
+  border-radius: var(--ant-radius-xs);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  line-height: 20px;
+  white-space: nowrap;
 }
 
-.status-badge--activo {
-  color: var(--success);
-  background: rgba(18, 128, 92, 0.12);
-}
-
-.status-badge--becado {
-  color: var(--brand-dark);
-  background: rgba(23, 104, 255, 0.12);
-}
-
-.status-badge--egresado {
-  color: var(--warning);
-  background: rgba(211, 139, 7, 0.14);
-}
-
-.status-badge--inactivo {
-  color: var(--danger);
-  background: rgba(197, 59, 56, 0.12);
-}
+.status-badge--activo  { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+.status-badge--becado  { color: #1677ff; background: #e6f4ff; border-color: #91caff; }
+.status-badge--egresado{ color: #d48806; background: #fffbe6; border-color: #ffe58f; }
+.status-badge--inactivo{ color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
 
 .table-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.6rem;
+  gap: 6px;
 }
 
 .empty-table {
-  padding: 2rem 1rem;
+  padding: 48px 16px;
   text-align: center;
-  color: var(--text-soft);
+  color: var(--ant-text-tertiary);
+  font-size: 14px;
 }
 
-/* ================================
+/* ============================================================
    Panel lateral
-================================ */
+   ============================================================ */
 .career-breakdown {
+  padding: 12px 20px 20px;
   display: grid;
-  gap: 0.8rem;
+  gap: 8px;
 }
 
 .career-pill {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 14px;
-  background: rgba(244, 248, 255, 0.9);
-  border: 1px solid rgba(23, 104, 255, 0.08);
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--ant-radius-sm);
+  background: var(--ant-bg-spot);
+  border: 1px solid var(--ant-border-secondary);
 }
 
-.career-pill strong {
-  font-size: 0.95rem;
-  color: var(--text-strong);
+.career-pill > div { min-width: 0; }
+
+.career-pill strong:first-child {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ant-text);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .career-pill span {
-  color: var(--text-soft);
-  font-size: 0.88rem;
+  font-size: 12px;
+  color: var(--ant-text-tertiary);
+  display: block;
+  margin-top: 1px;
+}
+
+.career-pill > strong:last-child {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ant-primary);
+  flex-shrink: 0;
 }
 
 .latest-location-card {
-  min-height: 94px;
-  padding: 1rem;
-  border-radius: 16px;
-  background: linear-gradient(145deg, rgba(18, 128, 92, 0.11), rgba(23, 104, 255, 0.06));
-  color: var(--text-strong);
-  line-height: 1.7;
+  padding: 0 20px 20px;
+  color: var(--ant-text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .latest-location-card strong {
   display: block;
-  margin-bottom: 0.25rem;
+  color: var(--ant-text);
+  font-weight: 500;
+  margin-bottom: 4px;
+  font-size: 14px;
 }
 
 .requirement-list {
   margin: 0;
-  padding-left: 1.1rem;
-  color: var(--text-body);
-  line-height: 1.85;
+  padding: 0 20px 20px 36px;
+  color: var(--ant-text-secondary);
+  font-size: 13px;
+  line-height: 2;
 }
 
-/* ================================
-   Formulario y modal
-================================ */
+/* ============================================================
+   Modal (Ant Design Modal)
+   ============================================================ */
+body.modal-is-open { overflow: hidden; }
+
 .app-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 999;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: rgba(8, 21, 45, 0.62);
-  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  background: rgba(0,0,0,.45);
+  overflow-y: auto;
 }
 
 .app-modal-panel {
-  width: min(1040px, 100%);
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
-  padding: 1.4rem;
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(250, 252, 255, 0.98);
-  box-shadow: 0 34px 90px rgba(5, 18, 43, 0.32);
-  animation: rise-in 0.3s ease;
+  width: min(1000px, 100%);
+  margin: auto;
+  border-radius: var(--ant-radius);
+  background: var(--ant-bg-container);
+  box-shadow: var(--ant-shadow);
+  animation: modal-rise var(--ant-motion) ease;
+}
+
+@keyframes modal-rise {
+  from { opacity: 0; transform: scale(.97) translateY(-12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .app-modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--ant-border-secondary);
 }
 
 .modal-chip {
-  background: rgba(23, 104, 255, 0.12);
-  color: var(--brand-dark);
+  background: var(--ant-primary-bg);
+  color: var(--ant-primary);
+  border: 1px solid var(--ant-primary-border);
+  font-size: 11px;
 }
 
 .app-modal-title {
-  margin: 0.8rem 0 0.35rem;
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: var(--text-strong);
+  margin: 6px 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ant-text);
 }
 
 .app-modal-copy {
   margin: 0;
-  color: var(--text-body);
-  line-height: 1.65;
+  color: var(--ant-text-secondary);
+  font-size: 13px;
 }
 
 .modal-close-button {
   flex-shrink: 0;
-  margin-top: 0.25rem;
+  width: 22px;
+  height: 22px;
+  opacity: .45;
+  transition: opacity var(--ant-motion-fast);
 }
+.modal-close-button:hover { opacity: .88; }
 
-.app-label {
-  font-weight: 800;
-  color: #17335f;
-  font-size: 0.92rem;
-}
-
-.app-input {
-  border-color: rgba(19, 65, 145, 0.14);
-  border-radius: 14px;
-  color: var(--text-strong);
-  padding: 0.85rem 0.95rem;
-  box-shadow: none !important;
-}
-
-.app-input:focus {
-  border-color: rgba(23, 104, 255, 0.48);
-  box-shadow: 0 0 0 4px rgba(23, 104, 255, 0.08) !important;
-}
-
-.app-textarea {
-  resize: vertical;
-}
-
-.field-error {
-  min-height: 1.15rem;
-  margin-top: 0.38rem;
-  color: var(--danger);
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.is-invalid-field {
-  border-color: rgba(197, 59, 56, 0.42) !important;
-  background: rgba(254, 243, 242, 0.75);
-}
-
-.location-panel {
-  padding: 1rem;
-  border-radius: 18px;
-  border: 1px solid rgba(23, 104, 255, 0.1);
-  background: rgba(244, 248, 255, 0.85);
-}
-
-.location-panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.9rem;
-}
-
-.location-copy {
-  margin: 0;
-  color: var(--text-body);
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.location-status,
-.form-status-text {
-  color: var(--text-soft);
-  font-size: 0.88rem;
-  line-height: 1.55;
+#studentForm {
+  padding: 20px 24px;
 }
 
 .app-modal-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1.4rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(19, 65, 145, 0.08);
+  gap: 12px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--ant-border-secondary);
+  background: var(--ant-bg-spot);
+  border-radius: 0 0 var(--ant-radius) var(--ant-radius);
 }
 
-.modal-actions {
+.modal-actions { display: flex; gap: 8px; }
+
+/* ============================================================
+   Formulario — Ant Design Input / Form
+   ============================================================ */
+.app-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ant-text);
+  margin-bottom: 4px !important;
+}
+
+.app-input {
+  height: 36px;
+  padding: 6px 11px;
+  border: 1px solid var(--ant-border);
+  border-radius: var(--ant-radius-sm);
+  color: var(--ant-text);
+  background: var(--ant-bg-container);
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  box-shadow: none !important;
+  transition: border-color var(--ant-motion-fast), box-shadow var(--ant-motion-fast);
+}
+
+.app-input:hover:not(:disabled) { border-color: var(--ant-primary-hover); }
+
+.app-input:focus {
+  border-color: var(--ant-primary) !important;
+  box-shadow: 0 0 0 2px rgba(5,145,255,.1) !important;
+}
+
+.app-textarea {
+  height: auto !important;
+  resize: vertical;
+  padding: 8px 11px;
+}
+
+.field-error {
+  min-height: 18px;
+  margin-top: 4px;
+  color: var(--ant-error);
+  font-size: 12px;
+}
+
+.is-invalid-field {
+  border-color: var(--ant-error) !important;
+}
+.is-invalid-field:hover,
+.is-invalid-field:focus {
+  border-color: var(--ant-error) !important;
+  box-shadow: 0 0 0 2px rgba(255,77,79,.1) !important;
+}
+
+.location-panel {
+  padding: 16px;
+  border-radius: var(--ant-radius-sm);
+  border: 1px solid var(--ant-border-secondary);
+  background: var(--ant-bg-spot);
+}
+
+.location-panel-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-/* ================================
-   Botones
-================================ */
+.location-copy {
+  margin: 2px 0 0;
+  color: var(--ant-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.location-status,
+.form-status-text {
+  font-size: 12px;
+  color: var(--ant-text-tertiary);
+  line-height: 1.5;
+}
+
+.location-status { margin-top: 10px; }
+
+/* ============================================================
+   Botones — Ant Design Button
+   ============================================================ */
 .app-primary-button,
 .app-secondary-button,
 .app-danger-button,
@@ -644,106 +748,125 @@ strong {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  min-height: 46px;
-  padding: 0.72rem 1.1rem;
-  border-radius: 14px;
-  font-weight: 800;
+  gap: 6px;
+  height: 36px;
+  padding: 6px 16px;
+  border-radius: var(--ant-radius-sm);
+  font-size: 14px;
+  font-weight: 500;
   border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--ant-motion-fast);
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
 }
 
+/* Primary */
 .app-primary-button {
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  color: #ffffff;
+  background: var(--ant-primary);
+  border-color: var(--ant-primary);
+  color: #fff;
 }
-
 .app-primary-button:hover,
 .app-primary-button:focus-visible {
-  color: #ffffff;
-  background: linear-gradient(135deg, #0f5fe9 0%, #0d47b1 100%);
+  background: var(--ant-primary-hover);
+  border-color: var(--ant-primary-hover);
+  color: #fff;
 }
 
+/* Secondary / Default */
 .app-secondary-button {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--text-strong);
-  border-color: rgba(19, 65, 145, 0.12);
+  background: var(--ant-bg-container);
+  border-color: var(--ant-border);
+  color: var(--ant-text);
 }
-
 .app-secondary-button:hover,
 .app-secondary-button:focus-visible {
-  color: var(--text-strong);
-  background: rgba(243, 247, 255, 0.98);
+  background: var(--ant-bg-container);
+  border-color: var(--ant-primary);
+  color: var(--ant-primary);
 }
 
+/* Danger */
 .app-danger-button {
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--ant-bg-container);
+  border-color: var(--ant-error);
+  color: var(--ant-error);
 }
-
 .app-danger-button:hover,
 .app-danger-button:focus-visible {
-  color: #ffffff;
-  background: rgba(197, 59, 56, 0.22);
+  background: var(--ant-error);
+  border-color: var(--ant-error);
+  color: #fff;
 }
 
-.panel-surface .app-danger-button {
-  background: rgba(197, 59, 56, 0.08);
-  color: var(--danger);
-  border-color: rgba(197, 59, 56, 0.14);
+/* Variantes dentro del hero (fondo azul) */
+.hero-panel .app-primary-button {
+  background: #fff;
+  border-color: #fff;
+  color: var(--ant-primary);
+}
+.hero-panel .app-primary-button:hover {
+  background: rgba(255,255,255,.9);
+  color: var(--ant-primary);
+}
+.hero-panel .app-secondary-button {
+  background: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.3);
+  color: #fff;
+}
+.hero-panel .app-secondary-button:hover {
+  background: rgba(255,255,255,.25);
+  color: #fff;
+}
+.hero-panel .app-danger-button {
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.35);
+  color: #fff;
+}
+.hero-panel .app-danger-button:hover {
+  background: var(--ant-error);
+  border-color: var(--ant-error);
+  color: #fff;
 }
 
+/* Ghost / Link */
 .app-ghost-button {
-  background: rgba(23, 104, 255, 0.08);
-  color: var(--brand-dark);
-  border-color: rgba(23, 104, 255, 0.12);
+  background: transparent;
+  border-color: var(--ant-primary);
+  color: var(--ant-primary);
 }
-
 .app-ghost-button:hover,
 .app-ghost-button:focus-visible {
-  color: var(--brand-dark);
-  background: rgba(23, 104, 255, 0.14);
+  background: var(--ant-primary-bg);
+  border-color: var(--ant-primary-hover);
+  color: var(--ant-primary-hover);
 }
 
-/* ================================
-   Animaciones y responsive
-================================ */
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Botones pequeños para la tabla */
+.btn-sm-action {
+  height: 28px !important;
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+  border-radius: var(--ant-radius-xs) !important;
 }
 
+/* ============================================================
+   Responsive
+   ============================================================ */
 @media (max-width: 1199.98px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  .dashboard-grid     { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .workspace-grid     { grid-template-columns: 1fr; }
+}
 
-  .workspace-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 991.98px) {
+  .app-shell { padding: 16px; }
 }
 
 @media (max-width: 767.98px) {
-  .hero-panel,
-  .panel-surface,
-  .app-modal-panel {
-    padding: 1.1rem;
-  }
-
-  .hero-title {
-    max-width: none;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .hero-panel       { padding: 20px; }
+  .dashboard-grid   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .app-modal-footer,
   .location-panel-head,
@@ -754,26 +877,18 @@ strong {
   }
 
   .modal-actions,
-  .hero-actions {
-    flex-direction: column;
-  }
+  .hero-actions { flex-direction: column; }
 
   .app-primary-button,
   .app-secondary-button,
   .app-danger-button,
-  .app-ghost-button {
-    width: 100%;
-  }
+  .app-ghost-button { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 575.98px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-  .app-table thead {
-    display: none;
-  }
+  .app-table thead { display: none; }
 
   .app-table,
   .app-table tbody,
@@ -784,16 +899,10 @@ strong {
   }
 
   .app-table tbody tr {
-    padding: 0.45rem 0;
-    border-bottom: 1px solid rgba(19, 65, 145, 0.08);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--ant-border-secondary);
   }
 
-  .app-table tbody td {
-    padding: 0.55rem 0.2rem;
-    border-bottom: 0;
-  }
-
-  .table-actions {
-    justify-content: flex-start;
-  }
+  .app-table tbody td { padding: 6px 16px; border-bottom: none; }
+  .table-actions      { justify-content: flex-start; padding: 4px 16px 8px; }
 }
