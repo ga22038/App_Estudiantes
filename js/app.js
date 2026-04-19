@@ -35,6 +35,13 @@ const DEFAULT_FILTERS = {
   status: "",
 };
 
+const STATUS_COLORS = {
+  Activo:   "#52c41a",
+  Becado:   "#1677ff",
+  Egresado: "#fa8c16",
+  Inactivo: "#ff4d4f",
+};
+
 const DOM = {
   feedbackContainer: document.querySelector("#feedbackContainer"),
   storageStatus: document.querySelector("#storageStatus"),
@@ -66,6 +73,8 @@ const DOM = {
   metricAverage: document.querySelector("#metricAverage"),
   metricAdults: document.querySelector("#metricAdults"),
   metricLocated: document.querySelector("#metricLocated"),
+  studentsMap: document.querySelector("#studentsMap"),
+  mapStudentCount: document.querySelector("#mapStudentCount"),
 };
 
 const STATE = {
@@ -76,6 +85,8 @@ const STATE = {
   worker: null,
   map: null,
   mapMarker: null,
+  studentsMap: null,
+  studentsMapLayer: null,
 };
 
 /**
@@ -170,6 +181,79 @@ async function geocodeMapPoint(lat, lng) {
 }
 
 /**
+ * Inicializa el mapa global del dashboard con tiles de OpenStreetMap.
+ */
+function initStudentsMap() {
+  const container = DOM.studentsMap;
+  if (!container || !window.L || STATE.studentsMap) return;
+
+  STATE.studentsMap = L.map("studentsMap").setView([13.7942, -88.8965], 7);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors",
+  }).addTo(STATE.studentsMap);
+
+  STATE.studentsMapLayer = L.layerGroup().addTo(STATE.studentsMap);
+}
+
+/**
+ * Actualiza los marcadores del mapa de overview con los estudiantes actuales.
+ *
+ * @param {Array<object>} students
+ */
+function updateStudentsMap(students) {
+  if (!STATE.studentsMap || !STATE.studentsMapLayer) return;
+
+  STATE.studentsMapLayer.clearLayers();
+
+  const located = students.filter(
+    (s) => s.latitud && s.longitud && !isNaN(Number(s.latitud))
+  );
+
+  located.forEach((student) => {
+    const color = STATUS_COLORS[student.estado] ?? "#8c8c8c";
+    const marker = L.circleMarker([Number(student.latitud), Number(student.longitud)], {
+      radius: 9,
+      fillColor: color,
+      color: "#fff",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.88,
+    });
+
+    marker.bindPopup(`
+      <strong>${student.nombres} ${student.apellidos}</strong><br/>
+      <span style="color:#666;font-size:12px">${student.carnet}</span><br/>
+      <span style="color:#666;font-size:12px">${student.carrera}</span><br/>
+      <span style="
+        display:inline-block;margin-top:4px;padding:1px 8px;
+        border-radius:4px;font-size:11px;font-weight:600;
+        background:${color}22;color:${color};border:1px solid ${color}66
+      ">${student.estado}</span>
+    `);
+
+    STATE.studentsMapLayer.addLayer(marker);
+  });
+
+  if (DOM.mapStudentCount) {
+    DOM.mapStudentCount.textContent =
+      located.length === 1 ? "1 marcador" : `${located.length} marcadores`;
+  }
+
+  if (located.length > 1) {
+    const bounds = L.featureGroup(
+      located.map((s) => L.circleMarker([Number(s.latitud), Number(s.longitud)]))
+    ).getBounds();
+    STATE.studentsMap.fitBounds(bounds, { padding: [40, 40] });
+  } else if (located.length === 1) {
+    STATE.studentsMap.setView(
+      [Number(located[0].latitud), Number(located[0].longitud)],
+      13
+    );
+  }
+}
+
+/**
  * Punto de entrada principal de la aplicacion.
  */
 function init() {
@@ -179,6 +263,7 @@ function init() {
   hydrateFilterInputs();
   bindEvents();
   setupWorker();
+  initStudentsMap();
   renderApplication();
 }
 
@@ -325,6 +410,7 @@ function renderApplication() {
       STATE.filteredStudents.length,
       STATE.students.length
     );
+    updateStudentsMap(STATE.students);
     renderStorageMeta();
     renderLatestLocation(
       DOM.latestLocationCard,
