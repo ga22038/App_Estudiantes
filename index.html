@@ -12,6 +12,10 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
@@ -465,11 +469,11 @@
                 <div class="location-panel-head">
                   <div>
                     <label class="form-label app-label mb-1" for="ubicacionTexto"
-                      >Ubicacion de referencia</label
+                      >Ubicacion en el mapa</label
                     >
                     <p class="location-copy">
-                      Puedes escribir la ubicacion manualmente o capturarla con
-                      geolocalizacion.
+                      Haz clic en el mapa para marcar la ubicacion del estudiante,
+                      o usa el boton GPS para detectarla automaticamente.
                     </p>
                   </div>
                   <button
@@ -477,16 +481,20 @@
                     type="button"
                     class="btn app-ghost-button"
                   >
-                    Usar mi ubicacion
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="10" stroke-dasharray="4 2"/></svg>
+                    Usar mi GPS
                   </button>
                 </div>
 
+                <div id="studentMap" class="student-map"></div>
+
+                <label class="form-label app-label mt-2" for="ubicacionTexto">Descripcion del lugar</label>
                 <textarea
                   id="ubicacionTexto"
                   name="ubicacionTexto"
                   class="form-control app-input app-textarea"
                   rows="2"
-                  placeholder="Ej. Santa Ana, El Salvador"
+                  placeholder="Se llena automaticamente al hacer clic en el mapa"
                 ></textarea>
                 <div class="field-error" data-error-for="ubicacionTexto"></div>
 
@@ -521,6 +529,7 @@
       </section>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="./js/app.js"></script>
   </body>
 </html>

@@ -74,7 +74,100 @@ const STATE = {
   filters: { ...DEFAULT_FILTERS },
   editingId: null,
   worker: null,
+  map: null,
+  mapMarker: null,
 };
+
+/**
+ * Inicializa el mapa Leaflet dentro del modal la primera vez que se abre.
+ */
+function initLocationMap() {
+  const container = document.querySelector("#studentMap");
+  if (!container || !window.L) return;
+
+  if (!STATE.map) {
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    });
+
+    STATE.map = L.map("studentMap").setView([13.7942, -88.8965], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(STATE.map);
+
+    STATE.map.on("click", async (event) => {
+      const { lat, lng } = event.latlng;
+      setMapMarker(lat, lng);
+      fillFormCoordinates(lat, lng);
+      await geocodeMapPoint(lat, lng);
+    });
+  }
+
+  STATE.map.invalidateSize();
+}
+
+/**
+ * Coloca o mueve el marcador en el mapa y lo hace arrastrable.
+ *
+ * @param {number} lat
+ * @param {number} lng
+ */
+function setMapMarker(lat, lng) {
+  if (STATE.mapMarker) {
+    STATE.mapMarker.setLatLng([lat, lng]);
+    return;
+  }
+
+  STATE.mapMarker = L.marker([lat, lng], { draggable: true }).addTo(STATE.map);
+
+  STATE.mapMarker.on("dragend", async (event) => {
+    const pos = event.target.getLatLng();
+    fillFormCoordinates(pos.lat, pos.lng);
+    await geocodeMapPoint(pos.lat, pos.lng);
+  });
+}
+
+/**
+ * Elimina el marcador del mapa si existe.
+ */
+function removeMapMarker() {
+  if (STATE.mapMarker) {
+    STATE.mapMarker.remove();
+    STATE.mapMarker = null;
+  }
+}
+
+/**
+ * Escribe las coordenadas en los inputs ocultos del formulario.
+ *
+ * @param {number} lat
+ * @param {number} lng
+ */
+function fillFormCoordinates(lat, lng) {
+  DOM.studentForm.elements.namedItem("latitud").value = lat.toFixed(6);
+  DOM.studentForm.elements.namedItem("longitud").value = lng.toFixed(6);
+}
+
+/**
+ * Llama al API de geocodificacion inversa y rellena la descripcion de ubicacion.
+ *
+ * @param {number} lat
+ * @param {number} lng
+ */
+async function geocodeMapPoint(lat, lng) {
+  renderLocationStatus(DOM.locationStatus, "Obteniendo nombre del lugar...");
+  try {
+    const result = await reverseGeocodeCoordinates(lat, lng);
+    DOM.studentForm.elements.namedItem("ubicacionTexto").value = result.label;
+    renderLocationStatus(DOM.locationStatus, "Ubicacion seleccionada correctamente.");
+    persistDraftFromForm();
+  } catch {
+    renderLocationStatus(DOM.locationStatus, "No se pudo obtener el nombre. Puedes escribirlo manualmente.");
+  }
+}
 
 /**
  * Punto de entrada principal de la aplicacion.
@@ -312,6 +405,11 @@ function openCreateModal() {
   }
 
   toggleModal(DOM.studentModal, true);
+  window.setTimeout(() => {
+    initLocationMap();
+    removeMapMarker();
+    STATE.map?.setView([13.7942, -88.8965], 7);
+  }, 0);
   DOM.studentForm.elements.namedItem("carnet")?.focus();
 }
 
@@ -351,6 +449,18 @@ function openEditModal(studentId) {
   );
 
   toggleModal(DOM.studentModal, true);
+  window.setTimeout(() => {
+    initLocationMap();
+    const lat = Number(student.latitud);
+    const lng = Number(student.longitud);
+    if (lat && lng) {
+      setMapMarker(lat, lng);
+      STATE.map.setView([lat, lng], 13);
+    } else {
+      removeMapMarker();
+      STATE.map?.setView([13.7942, -88.8965], 7);
+    }
+  }, 0);
   DOM.studentForm.elements.namedItem("carnet")?.focus();
 }
 
@@ -633,10 +743,9 @@ async function resolveLocationForForm() {
   try {
     const coordinates = await requestCurrentCoordinates();
 
-    DOM.studentForm.elements.namedItem("latitud").value =
-      coordinates.latitude.toFixed(6);
-    DOM.studentForm.elements.namedItem("longitud").value =
-      coordinates.longitude.toFixed(6);
+    fillFormCoordinates(coordinates.latitude, coordinates.longitude);
+    setMapMarker(coordinates.latitude, coordinates.longitude);
+    STATE.map?.setView([coordinates.latitude, coordinates.longitude], 14);
 
     renderLocationStatus(
       DOM.locationStatus,
