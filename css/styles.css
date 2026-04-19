@@ -439,6 +439,20 @@ strong { font-weight: 600; }
   letter-spacing: 0;
 }
 
+/* Columna carnet — no partir el texto */
+.app-table thead th:nth-child(1),
+.app-table tbody td:nth-child(1) {
+  white-space: nowrap;
+  width: 120px;
+}
+
+/* Columna acciones — ancho fijo para que no empuje */
+.app-table thead th:last-child,
+.app-table tbody td:last-child {
+  width: 150px;
+  white-space: nowrap;
+}
+
 .app-table tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--ant-border-secondary);

@@ -490,32 +490,8 @@
                 ></textarea>
                 <div class="field-error" data-error-for="ubicacionTexto"></div>
 
-                <div class="row g-3 mt-1">
-                  <div class="col-12 col-md-6">
-                    <label class="form-label app-label" for="latitud">Latitud</label>
-                    <input
-                      id="latitud"
-                      name="latitud"
-                      class="form-control app-input"
-                      type="text"
-                      readonly
-                      placeholder="Se llena automaticamente"
-                    />
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <label class="form-label app-label" for="longitud"
-                      >Longitud</label
-                    >
-                    <input
-                      id="longitud"
-                      name="longitud"
-                      class="form-control app-input"
-                      type="text"
-                      readonly
-                      placeholder="Se llena automaticamente"
-                    />
-                  </div>
-                </div>
+                <input type="hidden" id="latitud" name="latitud" />
+                <input type="hidden" id="longitud" name="longitud" />
 
                 <div id="locationStatus" class="location-status">
                   La ubicacion es opcional y no bloquea el guardado.
