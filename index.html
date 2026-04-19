@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro basico de estudiantes</title>
+    <meta
+      name="description"
+      content="Aplicacion web frontend para registrar estudiantes con localStorage, sessionStorage, geolocalizacion y dashboard."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript-banner">
+        Esta aplicacion necesita JavaScript para funcionar correctamente.
+      </div>
+    </noscript>
+
+    <div class="app-shell container-fluid px-3 px-lg-4 py-4 py-lg-5">
+      <!-- Encabezado principal -->
+      <header class="hero-panel">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-xl-8">
+            <span class="hero-chip">Proyecto final frontend</span>
+            <h1 class="hero-title">Registro basico de estudiantes</h1>
+            <p class="hero-copy">
+              Gestiona estudiantes con una interfaz limpia inspirada en Ant
+              Design, usando solo HTML, CSS, JavaScript, localStorage y APIs del
+              navegador.
+            </p>
+
+            <div class="hero-actions">
+              <button
+                id="newStudentButton"
+                type="button"
+                class="btn app-primary-button"
+              >
+                Nuevo estudiante
+              </button>
+              <button
+                id="demoButton"
+                type="button"
+                class="btn app-secondary-button"
+              >
+                Cargar datos de ejemplo
+              </button>
+              <button
+                id="clearAllButton"
+                type="button"
+                class="btn app-danger-button"
+              >
+                Limpiar registros
+              </button>
+            </div>
+          </div>
+
+          <div class="col-12 col-xl-4">
+            <div class="hero-side-panel">
+              <div class="hero-side-head">
+                <span class="hero-side-label">Estado de la sesion</span>
+                <span id="draftIndicator" class="badge rounded-pill text-bg-light d-none"
+                  >Borrador activo</span
+                >
+              </div>
+              <div id="storageStatus" class="hero-meta-list"></div>
+              <p class="hero-side-note">
+                Los registros viven en <strong>localStorage</strong> y los
+                filtros o borradores en <strong>sessionStorage</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Mensajes de estado global -->
+      <section id="feedbackContainer" class="feedback-stack" aria-live="polite"></section>
+
+      <!-- Dashboard de metricas -->
+      <section class="dashboard-grid" aria-label="Dashboard de metricas">
+        <article class="metric-card">
+          <span class="metric-label">Registros visibles</span>
+          <strong id="metricTotal" class="metric-value">0</strong>
+          <small class="metric-note">Vista actual del dashboard</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Estudiantes activos</span>
+          <strong id="metricActive" class="metric-value">0</strong>
+          <small class="metric-note">Conteo por estado</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Estudiantes inactivos</span>
+          <strong id="metricInactive" class="metric-value">0</strong>
+          <small class="metric-note">Seguimiento rapido</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Promedio general</span>
+          <strong id="metricAverage" class="metric-value">0.00</strong>
+          <small class="metric-note">Escala de 0 a 10</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Mayores de edad</span>
+          <strong id="metricAdults" class="metric-value">0</strong>
+          <small class="metric-note">Edad igual o mayor a 18</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Con ubicacion capturada</span>
+          <strong id="metricLocated" class="metric-value">0</strong>
+          <small class="metric-note">Geolocalizacion o texto manual</small>
+        </article>
+      </section>
+
+      <div class="workspace-grid">
+        <main class="workspace-main">
+          <!-- Barra de filtros -->
+          <section class="panel-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Buscador y filtros</h2>
+                <p class="panel-copy">
+                  Refina la tabla por carnet, nombre, carrera o estado.
+                </p>
+              </div>
+              <button id="resetFiltersButton" type="button" class="btn app-ghost-button">
+                Limpiar filtros
+              </button>
+            </div>
+
+            <div class="row g-3 align-items-end">
+              <div class="col-12 col-lg-5">
+                <label class="form-label app-label" for="searchInput"
+                  >Buscar estudiante</label
+                >
+                <input
+                  id="searchInput"
+                  class="form-control app-input"
+                  type="search"
+                  placeholder="Carnet, nombres o apellidos"
+                />
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label app-label" for="careerFilter"
+                  >Filtrar por carrera</label
+                >
+                <select id="careerFilter" class="form-select app-input">
+                  <option value="">Todas las carreras</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label app-label" for="statusFilter"
+                  >Filtrar por estado</label
+                >
+                <select id="statusFilter" class="form-select app-input">
+                  <option value="">Todos los estados</option>
+                  <option value="Activo">Activo</option>
+                  <option value="Becado">Becado</option>
+                  <option value="Egresado">Egresado</option>
+                  <option value="Inactivo">Inactivo</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-summary-row">
+              <span id="resultsSummary" class="results-summary"
+                >Mostrando 0 de 0 registros</span
+              >
+              <span class="filter-helper-text">
+                Los filtros se guardan en sessionStorage mientras dure la sesion.
+              </span>
+            </div>
+          </section>
+
+          <!-- Tabla principal CRUD -->
+          <section class="panel-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Listado de estudiantes</h2>
+                <p class="panel-copy">
+                  Edita, elimina y consulta cada registro desde la tabla
+                  principal.
+                </p>
+              </div>
+            </div>
+
+            <div class="table-responsive app-table-wrap">
+              <table class="table align-middle app-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Carnet</th>
+                    <th scope="col">Estudiante</th>
+                    <th scope="col">Carrera</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Promedio</th>
+                    <th scope="col">Ubicacion</th>
+                    <th scope="col" class="text-end">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="studentTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+
+        <aside class="workspace-side">
+          <!-- Resumen lateral -->
+          <section class="panel-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Resumen por carrera</h2>
+                <p class="panel-copy">
+                  Visual rapido del volumen de estudiantes por carrera.
+                </p>
+              </div>
+            </div>
+            <div id="careerBreakdown" class="career-breakdown"></div>
+          </section>
+
+          <section class="panel-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Ultima ubicacion registrada</h2>
+                <p class="panel-copy">
+                  Se actualiza con el registro mas reciente que tenga ubicacion.
+                </p>
+              </div>
+            </div>
+            <div id="latestLocationCard" class="latest-location-card">
+              Aun no hay ubicaciones registradas.
+            </div>
+          </section>
+
+          <section class="panel-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Mapa de requerimientos</h2>
+                <p class="panel-copy">
+                  Resumen rapido para defender el proyecto en clase.
+                </p>
+              </div>
+            </div>
+            <ul class="requirement-list">
+              <li>CRUD completo con validaciones, eventos y manejo del DOM.</li>
+              <li>Metricas calculadas con Web Worker.</li>
+              <li>Datos persistidos con localStorage y sessionStorage.</li>
+              <li>Uso de fetch, geolocalizacion y respuesta JSON.</li>
+              <li>Interfaz documentada y modular para GitHub.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Modal personalizado para crear y editar -->
+    <div id="studentModal" class="app-modal-backdrop" hidden>
+      <section
+        class="app-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <div class="app-modal-header">
+          <div>
+            <span id="modalModeBadge" class="modal-chip">Nuevo registro</span>
+            <h2 id="modalTitle" class="app-modal-title">Registrar estudiante</h2>
+            <p class="app-modal-copy">
+              Completa los campos requeridos. Los errores se mostraran debajo de
+              cada entrada.
+            </p>
+          </div>
+          <button
+            id="closeModalButton"
+            type="button"
+            class="btn-close modal-close-button"
+            aria-label="Cerrar formulario"
+          ></button>
+        </div>
+
+        <form id="studentForm" novalidate>
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label app-label" for="carnet">Carnet</label>
+              <input
+                id="carnet"
+                name="carnet"
+                class="form-control app-input"
+                type="text"
+                maxlength="20"
+                placeholder="Ej. UES-2026-001"
+              />
+              <div class="field-error" data-error-for="carnet"></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label app-label" for="correoInstitucional"
+                >Correo institucional</label
+              >
+              <input
+                id="correoInstitucional"
+                name="correoInstitucional"
+                class="form-control app-input"
+                type="email"
+                placeholder="nombre@ues.edu.sv"
+              />
+              <div
+                class="field-error"
+                data-error-for="correoInstitucional"
+              ></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label app-label" for="nombres">Nombres</label>
+              <input
+                id="nombres"
+                name="nombres"
+                class="form-control app-input"
+                type="text"
+                maxlength="60"
+                placeholder="Nombres del estudiante"
+              />
+              <div class="field-error" data-error-for="nombres"></div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label app-label" for="apellidos"
+                >Apellidos</label
+              >
+              <input
+                id="apellidos"
+                name="apellidos"
+                class="form-control app-input"
+                type="text"
+                maxlength="60"
+                placeholder="Apellidos del estudiante"
+              />
+              <div class="field-error" data-error-for="apellidos"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label app-label" for="edad">Edad</label>
+              <input
+                id="edad"
+                name="edad"
+                class="form-control app-input"
+                type="number"
+                min="15"
+                max="80"
+                placeholder="18"
+              />
+              <div class="field-error" data-error-for="edad"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label app-label" for="telefono">Telefono</label>
+              <input
+                id="telefono"
+                name="telefono"
+                class="form-control app-input"
+                type="tel"
+                maxlength="16"
+                placeholder="7000-0000"
+              />
+              <div class="field-error" data-error-for="telefono"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label app-label" for="encargado"
+                >Encargado</label
+              >
+              <input
+                id="encargado"
+                name="encargado"
+                class="form-control app-input"
+                type="text"
+                maxlength="80"
+                placeholder="Nombre del encargado"
+              />
+              <div class="field-error" data-error-for="encargado"></div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label app-label" for="direccion"
+                >Direccion</label
+              >
+              <textarea
+                id="direccion"
+                name="direccion"
+                class="form-control app-input app-textarea"
+                rows="2"
+                placeholder="Direccion de residencia"
+              ></textarea>
+              <div class="field-error" data-error-for="direccion"></div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+              <label class="form-label app-label" for="carrera">Carrera</label>
+              <select id="carrera" name="carrera" class="form-select app-input">
+                <option value="">Selecciona una carrera</option>
+                <option value="Ingenieria en Desarrollo de Software">
+                  Ingenieria en Desarrollo de Software
+                </option>
+                <option value="Ingenieria Industrial">
+                  Ingenieria Industrial
+                </option>
+                <option value="Arquitectura">Arquitectura</option>
+                <option value="Administracion de Empresas">
+                  Administracion de Empresas
+                </option>
+                <option value="Contaduria Publica">Contaduria Publica</option>
+                <option value="Medicina">Medicina</option>
+              </select>
+              <div class="field-error" data-error-for="carrera"></div>
+            </div>
+
+            <div class="col-12 col-md-4 col-lg-3">
+              <label class="form-label app-label" for="ciclo">Ciclo</label>
+              <select id="ciclo" name="ciclo" class="form-select app-input">
+                <option value="">Selecciona</option>
+                <option value="01">01</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="05">05</option>
+                <option value="06">06</option>
+                <option value="07">07</option>
+                <option value="08">08</option>
+                <option value="09">09</option>
+                <option value="10">10</option>
+              </select>
+              <div class="field-error" data-error-for="ciclo"></div>
+            </div>
+
+            <div class="col-12 col-md-4 col-lg-2">
+              <label class="form-label app-label" for="promedio">Promedio</label>
+              <input
+                id="promedio"
+                name="promedio"
+                class="form-control app-input"
+                type="number"
+                min="0"
+                max="10"
+                step="0.01"
+                placeholder="8.50"
+              />
+              <div class="field-error" data-error-for="promedio"></div>
+            </div>
+
+            <div class="col-12 col-md-4 col-lg-2">
+              <label class="form-label app-label" for="estado">Estado</label>
+              <select id="estado" name="estado" class="form-select app-input">
+                <option value="">Selecciona</option>
+                <option value="Activo">Activo</option>
+                <option value="Becado">Becado</option>
+                <option value="Egresado">Egresado</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+              <div class="field-error" data-error-for="estado"></div>
+            </div>
+
+            <div class="col-12">
+              <div class="location-panel">
+                <div class="location-panel-head">
+                  <div>
+                    <label class="form-label app-label mb-1" for="ubicacionTexto"
+                      >Ubicacion de referencia</label
+                    >
+                    <p class="location-copy">
+                      Puedes escribir la ubicacion manualmente o capturarla con
+                      geolocalizacion.
+                    </p>
+                  </div>
+                  <button
+                    id="locationButton"
+                    type="button"
+                    class="btn app-ghost-button"
+                  >
+                    Usar mi ubicacion
+                  </button>
+                </div>
+
+                <textarea
+                  id="ubicacionTexto"
+                  name="ubicacionTexto"
+                  class="form-control app-input app-textarea"
+                  rows="2"
+                  placeholder="Ej. Santa Ana, El Salvador"
+                ></textarea>
+                <div class="field-error" data-error-for="ubicacionTexto"></div>
+
+                <div class="row g-3 mt-1">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label app-label" for="latitud">Latitud</label>
+                    <input
+                      id="latitud"
+                      name="latitud"
+                      class="form-control app-input"
+                      type="text"
+                      readonly
+                      placeholder="Se llena automaticamente"
+                    />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label app-label" for="longitud"
+                      >Longitud</label
+                    >
+                    <input
+                      id="longitud"
+                      name="longitud"
+                      class="form-control app-input"
+                      type="text"
+                      readonly
+                      placeholder="Se llena automaticamente"
+                    />
+                  </div>
+                </div>
+
+                <div id="locationStatus" class="location-status">
+                  La ubicacion es opcional y no bloquea el guardado.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-modal-footer">
+            <span id="formStatusText" class="form-status-text">
+              El formulario guarda borrador en sessionStorage.
+            </span>
+            <div class="modal-actions">
+              <button
+                id="cancelModalButton"
+                type="button"
+                class="btn app-secondary-button"
+              >
+                Cancelar
+              </button>
+              <button id="submitButton" type="submit" class="btn app-primary-button">
+                Guardar estudiante
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
