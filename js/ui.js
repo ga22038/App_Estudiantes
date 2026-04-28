@@ -1,10 +1,12 @@
 /**
- * Escapa HTML para prevenir renderizados peligrosos en texto libre.
+ * Escapa caracteres especiales de HTML para prevenir ataques XSS.
+ * Siempre usa esta función antes de insertar texto del usuario con innerHTML.
+ * Sin esto, un atacante podría inyectar etiquetas <script> u otro HTML malicioso.
  *
- * @param {string} value
- * @returns {string}
+ * @param {string} value - Texto que puede contener caracteres peligrosos.
+ * @returns {string} Texto seguro para insertar en el DOM.
  */
-function escapeHtml(value) {
+export function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")

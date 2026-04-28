@@ -27,6 +27,7 @@ import {
   renderStorageStatus,
   renderCareerOptions,
   formatCareerName,
+  escapeHtml,  // Importada desde ui.js para evitar duplicar la función
 } from "./ui.js";
 import { requestCurrentCoordinates, reverseGeocodeCoordinates } from "./api.js";
 
@@ -36,6 +37,11 @@ const DEFAULT_FILTERS = {
   status: "",
 };
 
+/**
+ * Mapa de colores y clases CSS por estado del estudiante.
+ * Los valores de markerColor son variables CSS definidas en styles.css.
+ * Usar un objeto evita repetir cadenas "Activo", "Becado", etc. en varios lugares.
+ */
 const STATUS_THEME = {
   Activo: {
     markerColor: "--status-active-marker",
@@ -55,6 +61,9 @@ const STATUS_THEME = {
   },
 };
 
+/**
+ * Tema de respaldo cuando el estado del estudiante no coincide con ninguno de STATUS_THEME.
+ */
 const DEFAULT_STATUS_THEME = {
   markerColor: "--status-neutral-marker",
   badgeClass: "status-badge--neutral",
@@ -115,12 +124,27 @@ const STATE = {
   pendingConfirmation: null,
 };
 
+/**
+ * Verifica que un valor pueda usarse como coordenada geografica valida.
+ * Rechaza null, undefined, cadenas vacias y valores que no sean numeros finitos.
+ * Esto evita el bug de tratar la coordenada 0 (ecuador/meridiano) como "sin ubicacion".
+ *
+ * @param {any} value - El valor a verificar.
+ * @returns {boolean}
+ */
 function hasValidCoordinateValue(value) {
   if (value === null || value === undefined) return false;
   if (typeof value === "string" && value.trim() === "") return false;
   return Number.isFinite(Number(value));
 }
 
+/**
+ * Extrae las coordenadas de un estudiante como numeros o retorna null si no las tiene.
+ * Centraliza la conversion para no repetir la misma logica en varios lugares.
+ *
+ * @param {object} student - El objeto estudiante del registro.
+ * @returns {{ lat: number, lng: number } | null}
+ */
 function getStudentCoordinates(student) {
   if (
     !hasValidCoordinateValue(student?.latitud) ||
@@ -135,6 +159,13 @@ function getStudentCoordinates(student) {
   };
 }
 
+/**
+ * Indica si un estudiante tiene alguna forma de ubicacion registrada
+ * (texto descriptivo o coordenadas GPS).
+ *
+ * @param {object} student - El objeto estudiante del registro.
+ * @returns {boolean}
+ */
 function studentHasLocation(student) {
   return (
     Boolean(String(student?.ubicacionTexto ?? "").trim()) ||
@@ -142,6 +173,15 @@ function studentHasLocation(student) {
   );
 }
 
+/**
+ * Lee el valor actual de una variable CSS personalizada (--variable) desde el elemento raiz.
+ * Necesario para que los marcadores del mapa usen los mismos colores definidos en styles.css.
+ * Si la variable no existe, intenta una variable de respaldo o retorna el color heredado.
+ *
+ * @param {string} variableName - Nombre de la variable, ej: "--status-active-marker".
+ * @param {string} [fallbackVariableName] - Variable alternativa si la principal no existe.
+ * @returns {string} Valor CSS del color como cadena.
+ */
 function getCssVariable(variableName, fallbackVariableName = "") {
   const styles = getComputedStyle(document.documentElement);
   const value = resolveCssVariable(styles, variableName);
@@ -157,9 +197,20 @@ function getCssVariable(variableName, fallbackVariableName = "") {
   return styles.color;
 }
 
+/**
+ * Lee el valor de una variable CSS y, si apunta a otra variable con var(...),
+ * la resuelve de forma recursiva hasta un maximo de 3 niveles.
+ * Esto es necesario porque algunas variables del tema referencian a otras variables.
+ * Ejemplo: --status-active-marker -> var(--color-success) -> "#16a34a"
+ *
+ * @param {CSSStyleDeclaration} styles - Estilos computados del documento.
+ * @param {string} variableName - Nombre de la variable CSS a resolver.
+ * @returns {string} El valor final de la variable, o cadena vacia si no existe.
+ */
 function resolveCssVariable(styles, variableName) {
   let value = styles.getPropertyValue(variableName).trim();
 
+  // Itera para resolver referencias anidadas del tipo var(--otra-variable)
   for (let depth = 0; depth < 3 && value.startsWith("var("); depth += 1) {
     const nestedVariable = value.match(/^var\((--[\w-]+)\)$/)?.[1];
 
@@ -173,17 +224,15 @@ function resolveCssVariable(styles, variableName) {
   return value;
 }
 
+/**
+ * Retorna el tema visual (color y clase CSS) correspondiente al estado de un estudiante.
+ * Si el estado no esta en STATUS_THEME, retorna el tema neutral por defecto.
+ *
+ * @param {string} status - Estado del estudiante, ej: "Activo", "Becado".
+ * @returns {{ markerColor: string, badgeClass: string }}
+ */
 function getStatusTheme(status) {
   return STATUS_THEME[status] ?? DEFAULT_STATUS_THEME;
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 /**
@@ -217,16 +266,33 @@ function initLocationMap() {
   refreshLocationMapLayout();
 }
 
+/**
+ * Fuerza a Leaflet a recalcular el tamaño del mapa del formulario.
+ * Esto es necesario porque el mapa se inicializa dentro de un modal oculto:
+ * cuando el modal no esta visible, el navegador reporta dimensiones de 0x0,
+ * y Leaflet dibuja los tiles incorrectamente. Se llama dos veces:
+ * - requestAnimationFrame: en el siguiente frame de renderizado (muy rapido)
+ * - setTimeout 150ms: como seguro adicional, por si el modal tarda en animarse
+ */
 function refreshLocationMapLayout() {
+  // Espera al siguiente frame para que el modal ya este visible en pantalla
   window.requestAnimationFrame(() => {
     STATE.map?.invalidateSize();
   });
 
+  // Segundo intento despues de 150ms, cubre animaciones lentas del modal
   window.setTimeout(() => {
     STATE.map?.invalidateSize();
   }, 150);
 }
 
+/**
+ * Crea un icono personalizado para el marcador de ubicacion del formulario.
+ * Se usa un div con CSS en lugar del pin por defecto de Leaflet para que
+ * el marcador tenga el color del tema de la aplicacion.
+ *
+ * @returns {L.DivIcon} Icono Leaflet basado en HTML/CSS.
+ */
 function createLocationMarkerIcon() {
   return L.divIcon({
     className: "student-location-marker",
@@ -404,6 +470,9 @@ function init() {
 
 /**
  * Registra todos los listeners del DOM.
+ * El operador ?. (optional chaining) protege contra el caso en que un elemento
+ * no exista en el HTML: en lugar de lanzar un error, simplemente no hace nada.
+ * Es equivalente a escribir: if (DOM.newStudentButton) { DOM.newStudentButton.addEventListener(...) }
  */
 function bindEvents() {
   DOM.newStudentButton?.addEventListener("click", () => {
@@ -524,6 +593,9 @@ function bindEvents() {
  */
 function setupWorker() {
   try {
+    // import.meta.url es la URL del modulo actual (app.js).
+    // new URL(..., import.meta.url) construye la ruta absoluta al worker
+    // correctamente sin importar desde que servidor se sirva la app.
     STATE.worker = new Worker(new URL("./workers/student-metrics.worker.js", import.meta.url));
     STATE.worker.onmessage = (event) => {
       renderMetrics(
@@ -651,6 +723,9 @@ function openCreateModal() {
 
   removeMapMarker();
   toggleModal(DOM.studentModal, true);
+  // setTimeout con 0ms difiere la inicializacion del mapa al siguiente ciclo del navegador.
+  // Es necesario porque Leaflet necesita que el contenedor del mapa ya sea visible
+  // (width y height mayores a 0) para inicializarse correctamente.
   window.setTimeout(() => {
     initLocationMap();
     STATE.map?.setView([13.7942, -88.8965], 7);
@@ -694,6 +769,8 @@ function openEditModal(studentId) {
   );
 
   toggleModal(DOM.studentModal, true);
+  // setTimeout con 0ms: igual que en openCreateModal, espera a que el modal
+  // sea visible antes de inicializar y posicionar el mapa.
   window.setTimeout(() => {
     initLocationMap();
     const coordinates = getStudentCoordinates(student);
@@ -716,6 +793,22 @@ function closeModal() {
   clearFormErrors(DOM.studentForm);
 }
 
+/**
+ * Muestra el modal de confirmacion y retorna una Promise que se resuelve
+ * cuando el usuario hace clic en "Confirmar" (true) o "Cancelar" (false).
+ *
+ * Como funciona el patron:
+ * 1. Se crea una Promise y se guarda su funcion "resolve" en STATE.pendingConfirmation.
+ * 2. El modal queda visible esperando la decision del usuario.
+ * 3. Cuando el usuario hace clic, settleConfirmation() llama a resolve(true/false).
+ * 4. La Promise se resuelve y el codigo que uso "await requestConfirmation()" continua.
+ *
+ * Este patron permite escribir codigo asincrono de forma lineal con async/await,
+ * en lugar de usar callbacks anidados o eventos manuales.
+ *
+ * @param {{ title: string, message: string, confirmText?: string, cancelText?: string, tone?: string }} config
+ * @returns {Promise<boolean>} true si el usuario confirmo, false si cancelo.
+ */
 function requestConfirmation({
   title,
   message,
@@ -753,8 +846,12 @@ function requestConfirmation({
       : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>';
 
   toggleModal(DOM.confirmModal, true);
+  // setTimeout 0ms: mueve el foco al boton Cancelar despues de que el modal
+  // sea visible, para que la navegacion por teclado funcione correctamente.
   window.setTimeout(() => DOM.confirmCancelButton.focus(), 0);
 
+  // Se guarda "resolve" en el estado para poder llamarla desde settleConfirmation
+  // cuando el usuario haga clic, sin perder la referencia a esta Promise.
   return new Promise((resolve) => {
     STATE.pendingConfirmation = {
       resolve,
@@ -763,6 +860,12 @@ function requestConfirmation({
   });
 }
 
+/**
+ * Resuelve la confirmacion pendiente con el resultado del usuario.
+ * Cierra el modal, devuelve el foco al elemento que lo abrio y llama a resolve().
+ *
+ * @param {boolean} confirmed - true si el usuario confirmo, false si cancelo.
+ */
 function settleConfirmation(confirmed) {
   if (!STATE.pendingConfirmation) {
     return;
@@ -928,7 +1031,7 @@ async function loadDemoStudents() {
       ciclo: "06",
       promedio: 8.74,
       estado: "Activo",
-      fechaRegistro: new Date(Date.now() - 86_400_000).toISOString(),
+      fechaRegistro: new Date(Date.now() - 86_400_000).toISOString(), // hace 24 horas (24 * 60 * 60 * 1000 ms)
       latitud: 13.99417,
       longitud: -89.55972,
       ubicacionTexto: "Santa Ana, Santa Ana, El Salvador",
@@ -947,7 +1050,7 @@ async function loadDemoStudents() {
       ciclo: "03",
       promedio: 7.92,
       estado: "Becado",
-      fechaRegistro: new Date(Date.now() - 43_200_000).toISOString(),
+      fechaRegistro: new Date(Date.now() - 43_200_000).toISOString(), // hace 12 horas (12 * 60 * 60 * 1000 ms)
       latitud: null,
       longitud: null,
       ubicacionTexto: "Sonsonate, El Salvador",
