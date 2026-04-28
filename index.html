@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Registro basico de estudiantes</title>
+    <title>Registro básico de estudiantes</title>
     <meta
       name="description"
-      content="Aplicacion web frontend para registrar estudiantes con localStorage, sessionStorage, geolocalizacion y dashboard."
+      content="Aplicación web frontend para registrar estudiantes con localStorage, sessionStorage, geolocalización y dashboard."
     />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -21,7 +21,7 @@
   <body>
     <noscript>
       <div class="noscript-banner">
-        Esta aplicacion necesita JavaScript para funcionar correctamente.
+        Esta aplicación necesita JavaScript para funcionar correctamente.
       </div>
     </noscript>
 
@@ -31,7 +31,7 @@
         <div class="row g-4 align-items-start">
           <div class="col-12 col-xl-8">
             <span class="hero-chip">Proyecto final frontend</span>
-            <h1 class="hero-title">Registro basico de estudiantes</h1>
+            <h1 class="hero-title">Registro básico de estudiantes</h1>
             <p class="hero-copy">
               Gestiona estudiantes con una interfaz limpia inspirada en Ant
               Design, usando solo HTML, CSS, JavaScript, localStorage y APIs del
@@ -68,7 +68,7 @@
           <div class="col-12 col-xl-4">
             <div class="hero-side-panel">
               <div class="hero-side-head">
-                <span class="hero-side-label">Estado de la sesion</span>
+                <span class="hero-side-label">Estado de la sesión</span>
                 <span id="draftIndicator" class="badge rounded-pill text-bg-light d-none"
                   >Borrador activo</span
                 >
@@ -86,8 +86,8 @@
       <!-- Mensajes de estado global -->
       <section id="feedbackContainer" class="feedback-stack" aria-live="polite"></section>
 
-      <!-- Dashboard de metricas -->
-      <section class="dashboard-grid" aria-label="Dashboard de metricas">
+      <!-- Dashboard de métricas -->
+      <section class="dashboard-grid" aria-label="Dashboard de métricas">
         <article class="metric-card">
           <span class="metric-label">Registros visibles</span>
           <strong id="metricTotal" class="metric-value">0</strong>
@@ -96,12 +96,12 @@
         <article class="metric-card">
           <span class="metric-label">Estudiantes activos</span>
           <strong id="metricActive" class="metric-value">0</strong>
-          <small class="metric-note">Segun filtros activos</small>
+          <small class="metric-note">Según filtros activos</small>
         </article>
         <article class="metric-card">
           <span class="metric-label">Estudiantes inactivos</span>
           <strong id="metricInactive" class="metric-value">0</strong>
-          <small class="metric-note">Segun filtros activos</small>
+          <small class="metric-note">Según filtros activos</small>
         </article>
         <article class="metric-card">
           <span class="metric-label">Promedio general</span>
@@ -111,12 +111,12 @@
         <article class="metric-card">
           <span class="metric-label">Mayores de edad</span>
           <strong id="metricAdults" class="metric-value">0</strong>
-          <small class="metric-note">Segun filtros activos</small>
+          <small class="metric-note">Según filtros activos</small>
         </article>
         <article class="metric-card">
-          <span class="metric-label">Con ubicacion capturada</span>
+          <span class="metric-label">Con ubicación capturada</span>
           <strong id="metricLocated" class="metric-value">0</strong>
-          <small class="metric-note">Segun filtros activos</small>
+          <small class="metric-note">Según filtros activos</small>
         </article>
       </section>
 
@@ -125,7 +125,7 @@
         <div class="panel-head">
           <div>
             <h2 class="panel-title">Mapa de ubicaciones</h2>
-            <p class="panel-copy">Estudiantes con ubicacion registrada. Haz clic en un marcador para ver el detalle.</p>
+            <p class="panel-copy">Estudiantes con ubicación registrada. Haz clic en un marcador para ver el detalle.</p>
           </div>
           <span id="mapStudentCount" class="results-summary">0 marcadores</span>
         </div>
@@ -133,7 +133,7 @@
           <div id="studentsMap" class="students-overview-map"></div>
           <div id="studentsMapEmpty" class="map-empty-state" hidden>
             <strong>Sin ubicaciones para mostrar</strong>
-            <span>Agrega coordenadas o una ubicacion desde el formulario.</span>
+            <span>Agrega coordenadas o una ubicación desde el formulario.</span>
           </div>
         </div>
       </section>
@@ -193,7 +193,7 @@
                 >Mostrando 0 de 0 registros</span
               >
               <span class="filter-helper-text">
-                Los filtros se guardan en sessionStorage mientras dure la sesion.
+                Los filtros se guardan en sessionStorage mientras dure la sesión.
               </span>
             </div>
           </section>
@@ -219,7 +219,7 @@
                     <th scope="col">Carrera</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Promedio</th>
-                    <th scope="col">Ubicacion</th>
+                    <th scope="col">Ubicación</th>
                     <th scope="col" class="text-end">Acciones</th>
                   </tr>
                 </thead>
@@ -236,7 +236,7 @@
               <div>
                 <h2 class="panel-title">Resumen por carrera</h2>
                 <p class="panel-copy">
-                  Visual rapido del volumen de estudiantes por carrera.
+                  Visual rápido del volumen de estudiantes por carrera.
                 </p>
               </div>
             </div>
@@ -246,14 +246,14 @@
           <section class="panel-surface">
             <div class="panel-head">
               <div>
-                <h2 class="panel-title">Ultima ubicacion registrada</h2>
+                <h2 class="panel-title">Última ubicación registrada</h2>
                 <p class="panel-copy">
-                  Se actualiza con el registro mas reciente que tenga ubicacion.
+                  Se actualiza con el registro más reciente que tenga ubicación.
                 </p>
               </div>
             </div>
             <div id="latestLocationCard" class="latest-location-card">
-              Aun no hay ubicaciones registradas.
+              Aún no hay ubicaciones registradas.
             </div>
           </section>
 
@@ -262,15 +262,15 @@
               <div>
                 <h2 class="panel-title">Acerca de esta app</h2>
                 <p class="panel-copy">
-                  Informacion util del registro y sus datos locales.
+                  Información útil del registro y sus datos locales.
                 </p>
               </div>
             </div>
             <ul class="requirement-list">
               <li>Los registros se guardan en este navegador.</li>
-              <li>Los filtros y borradores duran solo la sesion actual.</li>
-              <li>Las metricas respetan la vista filtrada.</li>
-              <li>Las ubicaciones se muestran cuando hay coordenadas validas.</li>
+              <li>Los filtros y borradores duran solo la sesión actual.</li>
+              <li>Las métricas respetan la vista filtrada.</li>
+              <li>Las ubicaciones se muestran cuando hay coordenadas válidas.</li>
             </ul>
           </section>
         </aside>
@@ -303,7 +303,7 @@
             <span id="modalModeBadge" class="modal-chip">Nuevo registro</span>
             <h2 id="modalTitle" class="app-modal-title">Registrar estudiante</h2>
             <p class="app-modal-copy">
-              Completa los campos requeridos. Los errores se mostraran debajo de
+              Completa los campos requeridos. Los errores se mostrarán debajo de
               cada entrada.
             </p>
           </div>
@@ -390,7 +390,7 @@
             </div>
 
             <div class="col-12 col-md-4">
-              <label class="form-label app-label" for="telefono">Telefono</label>
+              <label class="form-label app-label" for="telefono">Teléfono</label>
               <input
                 id="telefono"
                 name="telefono"
@@ -419,14 +419,14 @@
 
             <div class="col-12">
               <label class="form-label app-label" for="direccion"
-                >Direccion</label
+                >Dirección</label
               >
               <textarea
                 id="direccion"
                 name="direccion"
                 class="form-control app-input app-textarea"
                 rows="2"
-                placeholder="Direccion de residencia"
+                placeholder="Dirección de residencia"
               ></textarea>
               <div class="field-error" data-error-for="direccion"></div>
             </div>
@@ -436,16 +436,16 @@
               <select id="carrera" name="carrera" class="form-select app-input">
                 <option value="">Selecciona una carrera</option>
                 <option value="Ingenieria en Desarrollo de Software">
-                  Ingenieria en Desarrollo de Software
+                  Ingeniería en Desarrollo de Software
                 </option>
                 <option value="Ingenieria Industrial">
-                  Ingenieria Industrial
+                  Ingeniería Industrial
                 </option>
                 <option value="Arquitectura">Arquitectura</option>
                 <option value="Administracion de Empresas">
-                  Administracion de Empresas
+                  Administración de Empresas
                 </option>
-                <option value="Contaduria Publica">Contaduria Publica</option>
+                <option value="Contaduria Publica">Contaduría Pública</option>
                 <option value="Medicina">Medicina</option>
               </select>
               <div class="field-error" data-error-for="carrera"></div>
@@ -501,11 +501,11 @@
                 <div class="location-panel-head">
                   <div>
                     <label class="form-label app-label mb-1" for="ubicacionTexto"
-                      >Ubicacion en el mapa</label
+                      >Ubicación en el mapa</label
                     >
                     <p class="location-copy">
-                      Haz clic en el mapa para marcar la ubicacion del estudiante,
-                      o usa el boton GPS para detectarla automaticamente.
+                      Haz clic en el mapa para marcar la ubicación del estudiante,
+                      o usa el botón GPS para detectarla automáticamente.
                     </p>
                   </div>
                   <button
@@ -520,13 +520,13 @@
 
                 <div id="studentMap" class="student-map"></div>
 
-                <label class="form-label app-label mt-2" for="ubicacionTexto">Descripcion del lugar</label>
+                <label class="form-label app-label mt-2" for="ubicacionTexto">Descripción del lugar</label>
                 <textarea
                   id="ubicacionTexto"
                   name="ubicacionTexto"
                   class="form-control app-input app-textarea"
                   rows="2"
-                  placeholder="Se llena automaticamente al hacer clic en el mapa"
+                  placeholder="Se llena automáticamente al hacer clic en el mapa"
                 ></textarea>
                 <div class="field-error" data-error-for="ubicacionTexto"></div>
 
@@ -534,7 +534,7 @@
                 <input type="hidden" id="longitud" name="longitud" />
 
                 <div id="locationStatus" class="location-status">
-                  La ubicacion es opcional y no bloquea el guardado.
+                  La ubicación es opcional y no bloquea el guardado.
                 </div>
               </div>
             </div>

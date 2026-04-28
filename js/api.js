@@ -5,21 +5,21 @@ const GEOLOCATION_OPTIONS = {
 };
 
 /**
- * Solicita la posicion actual del navegador y la devuelve como promesa.
+ * Solicita la posición actual del navegador y la devuelve como promesa.
  *
  * @returns {Promise<{ latitude: number, longitude: number }>}
  */
 export function requestCurrentCoordinates() {
   return new Promise((resolve, reject) => {
     if (!("geolocation" in navigator)) {
-      reject(new Error("Este navegador no soporta geolocalizacion."));
+      reject(new Error("Este navegador no soporta geolocalización."));
       return;
     }
 
     if (!window.isSecureContext) {
       reject(
         new Error(
-          "La geolocalizacion requiere HTTPS o localhost para funcionar."
+          "La geolocalización requiere HTTPS o localhost para funcionar."
         )
       );
       return;
@@ -41,7 +41,7 @@ export function requestCurrentCoordinates() {
 }
 
 /**
- * Traduce coordenadas GPS a una etiqueta de ubicacion legible por humanos.
+ * Traduce coordenadas GPS a una etiqueta de ubicación legible por humanos.
  * La llamada usa fetch para cumplir el requisito del proyecto.
  *
  * @param {number} latitude
@@ -61,7 +61,7 @@ export async function reverseGeocodeCoordinates(latitude, longitude) {
   });
 
   if (!response.ok) {
-    throw new Error("No fue posible consultar la ubicacion en el servicio externo.");
+    throw new Error("No fue posible consultar la ubicación en el servicio externo.");
   }
 
   const payload = await response.json();
@@ -71,7 +71,7 @@ export async function reverseGeocodeCoordinates(latitude, longitude) {
 }
 
 /**
- * Regresa un mensaje mas humano a partir del error del navegador.
+ * Regresa un mensaje más humano a partir del error del navegador.
  *
  * @param {GeolocationPositionError} error
  * @returns {string}
@@ -79,13 +79,13 @@ export async function reverseGeocodeCoordinates(latitude, longitude) {
 function resolveGeolocationMessage(error) {
   switch (error.code) {
     case error.PERMISSION_DENIED:
-      return "Permiso de geolocalizacion denegado por el usuario.";
+      return "Permiso de geolocalización denegado por el usuario.";
     case error.POSITION_UNAVAILABLE:
-      return "No fue posible obtener la posicion actual.";
+      return "No fue posible obtener la posición actual.";
     case error.TIMEOUT:
-      return "La geolocalizacion excedio el tiempo de espera.";
+      return "La geolocalización excedió el tiempo de espera.";
     default:
-      return "Ocurrio un error inesperado con la geolocalizacion.";
+      return "Ocurrió un error inesperado con la geolocalización.";
   }
 }
 

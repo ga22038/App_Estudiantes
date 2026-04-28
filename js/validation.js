@@ -43,7 +43,7 @@ export function validateStudent(student, students, currentId = null) {
   if (!correo) {
     errors.correoInstitucional = "El correo institucional es obligatorio.";
   } else if (!EMAIL_PATTERN.test(correo)) {
-    errors.correoInstitucional = "Ingresa un correo con formato valido.";
+    errors.correoInstitucional = "Ingresa un correo con formato válido.";
   }
 
   if (!nombres) {
@@ -61,9 +61,9 @@ export function validateStudent(student, students, currentId = null) {
   }
 
   if (!telefono) {
-    errors.telefono = "El telefono es obligatorio.";
+    errors.telefono = "El teléfono es obligatorio.";
   } else if (!PHONE_PATTERN.test(telefono)) {
-    errors.telefono = "Usa un telefono valido de 8 a 16 caracteres.";
+    errors.telefono = "Usa un teléfono válido de 8 a 16 caracteres.";
   }
 
   if (!encargado) {
@@ -71,7 +71,7 @@ export function validateStudent(student, students, currentId = null) {
   }
 
   if (!direccion) {
-    errors.direccion = "La direccion es obligatoria.";
+    errors.direccion = "La dirección es obligatoria.";
   }
 
   if (!carrera) {

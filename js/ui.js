@@ -13,6 +13,24 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+const CAREER_LABELS = Object.freeze({
+  "Ingenieria en Desarrollo de Software": "Ingeniería en Desarrollo de Software",
+  "Ingenieria Industrial": "Ingeniería Industrial",
+  "Administracion de Empresas": "Administración de Empresas",
+  "Contaduria Publica": "Contaduría Pública",
+});
+
+/**
+ * Muestra nombres de carrera con tildes sin romper datos guardados previamente.
+ *
+ * @param {string} career
+ * @returns {string}
+ */
+export function formatCareerName(career) {
+  const normalizedCareer = String(career ?? "").trim();
+  return CAREER_LABELS[normalizedCareer] ?? normalizedCareer;
+}
+
 /**
  * Formatea una fecha ISO para mostrarla de manera amigable.
  *
@@ -82,7 +100,7 @@ export function renderStudentTable(tableBody, students) {
       const fullName = `${escapeHtml(student.nombres)} ${escapeHtml(student.apellidos)}`;
       const locationLabel = student.ubicacionTexto
         ? escapeHtml(student.ubicacionTexto)
-        : "Sin ubicacion";
+        : "Sin ubicación";
 
       return `
         <tr>
@@ -98,7 +116,7 @@ export function renderStudentTable(tableBody, students) {
           </td>
           <td data-label="Carrera">
             <div class="student-name">
-              <strong>${escapeHtml(student.carrera)}</strong>
+              <strong>${escapeHtml(formatCareerName(student.carrera))}</strong>
               <span>Ciclo ${escapeHtml(student.ciclo)}</span>
             </div>
           </td>
@@ -109,9 +127,9 @@ export function renderStudentTable(tableBody, students) {
           </td>
           <td data-label="Promedio">
             <strong>${Number(student.promedio ?? 0).toFixed(2)}</strong>
-            <div class="cell-muted">${escapeHtml(String(student.edad))} anios</div>
+            <div class="cell-muted">${escapeHtml(String(student.edad))} años</div>
           </td>
-          <td data-label="Ubicacion">
+          <td data-label="Ubicación">
             <div class="student-name">
               <strong>${locationLabel}</strong>
               <span>${escapeHtml(student.telefono)}</span>
@@ -146,7 +164,7 @@ export function renderStudentTable(tableBody, students) {
 }
 
 /**
- * Actualiza las metricas visibles del dashboard.
+ * Actualiza las métricas visibles del dashboard.
  *
  * @param {Record<string, HTMLElement>} metricNodes
  * @param {Record<string, any>} metrics
@@ -167,15 +185,19 @@ export function renderMetrics(metricNodes, metrics) {
  * @param {Record<string, number>} byCareer
  */
 export function renderCareerBreakdown(container, byCareer) {
-  const entries = Object.entries(byCareer ?? {});
+  const entries = Object.entries(byCareer ?? {}).reduce((accumulator, [career, total]) => {
+    const careerLabel = formatCareerName(career);
+    accumulator.set(careerLabel, (accumulator.get(careerLabel) ?? 0) + total);
+    return accumulator;
+  }, new Map());
 
-  if (!entries.length) {
+  if (!entries.size) {
     container.innerHTML =
       '<div class="career-pill"><strong>Sin datos</strong><span>Agrega estudiantes para ver el resumen.</span></div>';
     return;
   }
 
-  container.innerHTML = entries
+  container.innerHTML = [...entries]
     .sort((left, right) => right[1] - left[1])
     .map(([career, total]) => {
       return `
@@ -203,14 +225,14 @@ export function renderResultsSummary(summaryNode, visibleTotal, completeTotal) {
 }
 
 /**
- * Muestra la ultima ubicacion registrada disponible.
+ * Muestra la última ubicación registrada disponible.
  *
  * @param {HTMLElement} container
  * @param {object|null} student
  */
 export function renderLatestLocation(container, student) {
   if (!student) {
-    container.textContent = "Aun no hay ubicaciones registradas.";
+    container.textContent = "Aún no hay ubicaciones registradas.";
     return;
   }
 
@@ -306,13 +328,13 @@ export function toggleModal(modal, shouldOpen) {
 }
 
 /**
- * Actualiza los textos del modal segun el modo actual.
+ * Actualiza los textos del modal según el modo actual.
  *
  * @param {Record<string, HTMLElement>} modalNodes
  * @param {boolean} isEditing
  */
 export function renderModalMeta(modalNodes, isEditing) {
-  modalNodes.modeBadge.textContent = isEditing ? "Modo edicion" : "Nuevo registro";
+  modalNodes.modeBadge.textContent = isEditing ? "Modo edición" : "Nuevo registro";
   modalNodes.title.textContent = isEditing
     ? "Editar estudiante"
     : "Registrar estudiante";
@@ -322,7 +344,7 @@ export function renderModalMeta(modalNodes, isEditing) {
 }
 
 /**
- * Pinta un mensaje de ubicacion en el formulario.
+ * Pinta un mensaje de ubicación en el formulario.
  *
  * @param {HTMLElement} node
  * @param {string} message
@@ -332,7 +354,7 @@ export function renderLocationStatus(node, message) {
 }
 
 /**
- * Muestra una alerta temporal en la parte superior de la pagina.
+ * Muestra una alerta temporal en la parte superior de la página.
  *
  * @param {HTMLElement} container
  * @param {{ tone: "success"|"warning"|"error", title: string, message: string }} config
@@ -402,7 +424,7 @@ export function renderCareerOptions(select, careers, selectedValue = "") {
       <option value="">Todas las carreras</option>
       ${uniqueCareers
         .map((career) => {
-          return `<option value="${escapeHtml(career)}">${escapeHtml(career)}</option>`;
+          return `<option value="${escapeHtml(career)}">${escapeHtml(formatCareerName(career))}</option>`;
         })
         .join("")}
     `;

@@ -1,5 +1,5 @@
 /**
- * Worker dedicado a calcular metricas del dashboard sin bloquear la UI.
+ * Worker dedicado a calcular métricas del dashboard sin bloquear la UI.
  */
 function hasValidCoordinateValue(value) {
   if (value === null || value === undefined) return false;
