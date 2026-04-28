@@ -1,46 +1,140 @@
 /* ============================================================
-   Ant Design 5 — Design Tokens
+   Paleta profesional y tokens de diseno
    ============================================================ */
 :root {
-  --ant-primary:          #1677ff;
-  --ant-primary-hover:    #4096ff;
-  --ant-primary-dark:     #0958d9;
-  --ant-primary-bg:       #e6f4ff;
-  --ant-primary-border:   #91caff;
+  /* Paleta central: cambia estos valores para modificar todo el tema. */
+  --color-brand:          #0f766e;
+  --color-brand-hover:    #0d9488;
+  --color-brand-strong:   #134e4a;
+  --color-brand-soft:     #e6fffb;
+  --color-brand-border:   #99f6e4;
+  --color-accent:         #2563eb;
+  --color-accent-soft:    #eff6ff;
+  --color-accent-border:  #bfdbfe;
 
-  --ant-success:          #52c41a;
-  --ant-success-bg:       #f6ffed;
-  --ant-success-border:   #b7eb8f;
-  --ant-success-text:     #389e0d;
+  --color-success:        #16a34a;
+  --color-success-soft:   #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-success-text:   #15803d;
 
-  --ant-warning:          #faad14;
-  --ant-warning-bg:       #fffbe6;
-  --ant-warning-border:   #ffe58f;
-  --ant-warning-text:     #d48806;
+  --color-warning:        #d97706;
+  --color-warning-soft:   #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-text:   #b45309;
 
-  --ant-error:            #ff4d4f;
-  --ant-error-bg:         #fff1f0;
-  --ant-error-border:     #ffa39e;
-  --ant-error-text:       #cf1322;
+  --color-danger:         #dc2626;
+  --color-danger-soft:    #fef2f2;
+  --color-danger-border:  #fecaca;
+  --color-danger-text:    #b91c1c;
 
-  --ant-text:             rgba(0, 0, 0, 0.88);
-  --ant-text-secondary:   rgba(0, 0, 0, 0.65);
-  --ant-text-tertiary:    rgba(0, 0, 0, 0.45);
+  --color-info:           #0891b2;
+  --color-purple:         #7c3aed;
+  --color-neutral:        #64748b;
 
-  --ant-bg-layout:        #f0f2f5;
-  --ant-bg-container:     #ffffff;
-  --ant-bg-spot:          #fafafa;
+  --color-text:           #172033;
+  --color-text-secondary: #526070;
+  --color-text-tertiary:  #7a8794;
+  --color-page-bg:        #f4f7f8;
+  --color-surface:        #ffffff;
+  --color-surface-soft:   #f8faf9;
+  --color-border:         #d6dddc;
+  --color-border-soft:    #e8eeec;
+  --color-white:          #ffffff;
+  --color-transparent:    transparent;
 
-  --ant-border:           #d9d9d9;
-  --ant-border-secondary: #f0f0f0;
+  --hero-gradient:        linear-gradient(135deg, var(--color-brand-strong) 0%, var(--color-brand) 55%, var(--color-accent) 100%);
+  --hero-text:            var(--color-white);
+  --hero-text-soft:       rgb(255 255 255 / .84);
+  --hero-text-muted:      rgb(255 255 255 / .68);
+  --hero-chip-bg:         rgb(255 255 255 / .16);
+  --hero-chip-border:     rgb(255 255 255 / .24);
+  --hero-chip-text:       rgb(255 255 255 / .95);
+  --hero-panel-bg:        rgb(15 23 42 / .22);
+  --hero-panel-border:    rgb(255 255 255 / .18);
+  --hero-divider:         rgb(255 255 255 / .14);
+  --hero-decor-strong:    rgb(255 255 255 / .08);
+  --hero-decor-soft:      rgb(255 255 255 / .05);
+  --hero-button-hover:    rgb(255 255 255 / .9);
+  --hero-button-bg:       rgb(255 255 255 / .14);
+  --hero-button-bg-hover: rgb(255 255 255 / .24);
+  --hero-button-border:   rgb(255 255 255 / .32);
+
+  --surface-hover:        rgb(15 23 42 / .03);
+  --modal-backdrop:       rgb(15 23 42 / .48);
+  --focus-ring:           rgb(15 118 110 / .16);
+  --danger-focus-ring:    rgb(220 38 38 / .14);
+  --map-empty-bg:         rgb(255 255 255 / .9);
+  --leaflet-marker-ring:  var(--color-white);
+  --popup-muted:          var(--color-text-tertiary);
+
+  --metric-total:         var(--color-brand);
+  --metric-active:        var(--color-success);
+  --metric-inactive:      var(--color-danger);
+  --metric-average:       var(--color-purple);
+  --metric-adults:        var(--color-warning);
+  --metric-located:       var(--color-info);
+
+  --status-active-marker:   var(--color-success);
+  --status-active-text:     var(--color-success-text);
+  --status-active-bg:       var(--color-success-soft);
+  --status-active-border:   var(--color-success-border);
+  --status-scholar-marker:  var(--color-accent);
+  --status-scholar-text:    var(--color-accent);
+  --status-scholar-bg:      var(--color-accent-soft);
+  --status-scholar-border:  var(--color-accent-border);
+  --status-graduate-marker: var(--color-warning);
+  --status-graduate-text:   var(--color-warning-text);
+  --status-graduate-bg:     var(--color-warning-soft);
+  --status-graduate-border: var(--color-warning-border);
+  --status-inactive-marker: var(--color-danger);
+  --status-inactive-text:   var(--color-danger-text);
+  --status-inactive-bg:     var(--color-danger-soft);
+  --status-inactive-border: var(--color-danger-border);
+  --status-neutral-marker:  var(--color-neutral);
+  --status-neutral-text:    var(--color-neutral);
+  --status-neutral-bg:      var(--color-surface-soft);
+  --status-neutral-border:  var(--color-border);
+
+  --ant-primary:          var(--color-brand);
+  --ant-primary-hover:    var(--color-brand-hover);
+  --ant-primary-dark:     var(--color-brand-strong);
+  --ant-primary-bg:       var(--color-brand-soft);
+  --ant-primary-border:   var(--color-brand-border);
+
+  --ant-success:          var(--color-success);
+  --ant-success-bg:       var(--color-success-soft);
+  --ant-success-border:   var(--color-success-border);
+  --ant-success-text:     var(--color-success-text);
+
+  --ant-warning:          var(--color-warning);
+  --ant-warning-bg:       var(--color-warning-soft);
+  --ant-warning-border:   var(--color-warning-border);
+  --ant-warning-text:     var(--color-warning-text);
+
+  --ant-error:            var(--color-danger);
+  --ant-error-bg:         var(--color-danger-soft);
+  --ant-error-border:     var(--color-danger-border);
+  --ant-error-text:       var(--color-danger-text);
+
+  --ant-text:             var(--color-text);
+  --ant-text-secondary:   var(--color-text-secondary);
+  --ant-text-tertiary:    var(--color-text-tertiary);
+
+  --ant-bg-layout:        var(--color-page-bg);
+  --ant-bg-container:     var(--color-surface);
+  --ant-bg-spot:          var(--color-surface-soft);
+
+  --ant-border:           var(--color-border);
+  --ant-border-secondary: var(--color-border-soft);
 
   --ant-radius-xs:  4px;
   --ant-radius-sm:  6px;
   --ant-radius:     8px;
   --ant-radius-lg: 12px;
 
-  --ant-shadow-sm: 0 1px 2px rgba(0,0,0,.03), 0 1px 6px -1px rgba(0,0,0,.02), 0 2px 4px rgba(0,0,0,.02);
-  --ant-shadow:    0 3px 6px -4px rgba(0,0,0,.12), 0 6px 16px rgba(0,0,0,.08), 0 9px 28px 8px rgba(0,0,0,.05);
+  --ant-shadow-sm: 0 1px 2px rgb(15 23 42 / .04), 0 4px 14px rgb(15 23 42 / .05);
+  --ant-shadow:    0 18px 45px rgb(15 23 42 / .16);
+  --ant-shadow-hover: 0 10px 24px rgb(15 23 42 / .12);
 
   --ant-motion-fast: 0.1s;
   --ant-motion:      0.2s;
@@ -94,8 +188,8 @@ strong { font-weight: 600; }
   padding: 28px 32px;
   margin-bottom: 24px;
   border-radius: var(--ant-radius-lg);
-  background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
-  color: #fff;
+  background: var(--hero-gradient);
+  color: var(--hero-text);
 }
 
 /* Círculos decorativos sutiles */
@@ -107,7 +201,7 @@ strong { font-weight: 600; }
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: rgba(255,255,255,.08);
+  background: var(--hero-decor-strong);
   pointer-events: none;
 }
 
@@ -119,7 +213,7 @@ strong { font-weight: 600; }
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: rgba(255,255,255,.05);
+  background: var(--hero-decor-soft);
   pointer-events: none;
 }
 
@@ -136,9 +230,9 @@ strong { font-weight: 600; }
 }
 
 .hero-chip {
-  background: rgba(255,255,255,.18);
-  color: rgba(255,255,255,.95);
-  border: 1px solid rgba(255,255,255,.25);
+  background: var(--hero-chip-bg);
+  color: var(--hero-chip-text);
+  border: 1px solid var(--hero-chip-border);
 }
 
 .hero-title {
@@ -146,12 +240,12 @@ strong { font-weight: 600; }
   font-size: clamp(22px, 2.4vw, 32px);
   font-weight: 700;
   line-height: 1.2;
-  color: #fff;
+  color: var(--hero-text);
 }
 
 .hero-copy {
   margin: 0;
-  color: rgba(255,255,255,.82);
+  color: var(--hero-text-soft);
   font-size: 14px;
   line-height: 1.65;
   max-width: 56ch;
@@ -180,8 +274,8 @@ strong { font-weight: 600; }
 .hero-side-panel {
   padding: 16px 20px;
   border-radius: var(--ant-radius);
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.16);
+  background: var(--hero-panel-bg);
+  border: 1px solid var(--hero-panel-border);
   backdrop-filter: blur(8px);
 }
 
@@ -196,7 +290,7 @@ strong { font-weight: 600; }
 .hero-side-label {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,.9);
+  color: var(--hero-chip-text);
 }
 
 .hero-meta-list { display: grid; gap: 10px; }
@@ -207,18 +301,18 @@ strong { font-weight: 600; }
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255,255,255,.12);
+  border-bottom: 1px solid var(--hero-divider);
 }
 
 .hero-meta-item:last-child { padding-bottom: 0; border-bottom: none; }
 
-.hero-meta-label { color: rgba(255,255,255,.72); font-size: 13px; }
+.hero-meta-label { color: var(--hero-text-muted); font-size: 13px; }
 
-.hero-meta-value { font-size: 14px; font-weight: 700; color: #fff; }
+.hero-meta-value { font-size: 14px; font-weight: 700; color: var(--hero-text); }
 
 .hero-side-note {
   margin: 12px 0 0;
-  color: rgba(255,255,255,.65);
+  color: var(--hero-text-muted);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -244,7 +338,7 @@ strong { font-weight: 600; }
   transition: box-shadow var(--ant-motion);
 }
 
-.metric-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.metric-card:hover { box-shadow: var(--ant-shadow-hover); }
 
 /* Barra de color superior por posición */
 .metric-card::before {
@@ -255,12 +349,12 @@ strong { font-weight: 600; }
   border-radius: var(--ant-radius) var(--ant-radius) 0 0;
 }
 
-.metric-card:nth-child(1)::before { background: #1677ff; }
-.metric-card:nth-child(2)::before { background: #52c41a; }
-.metric-card:nth-child(3)::before { background: #ff4d4f; }
-.metric-card:nth-child(4)::before { background: #722ed1; }
-.metric-card:nth-child(5)::before { background: #fa8c16; }
-.metric-card:nth-child(6)::before { background: #13c2c2; }
+.metric-card:nth-child(1)::before { background: var(--metric-total); }
+.metric-card:nth-child(2)::before { background: var(--metric-active); }
+.metric-card:nth-child(3)::before { background: var(--metric-inactive); }
+.metric-card:nth-child(4)::before { background: var(--metric-average); }
+.metric-card:nth-child(5)::before { background: var(--metric-adults); }
+.metric-card:nth-child(6)::before { background: var(--metric-located); }
 
 .metric-label {
   display: block;
@@ -475,7 +569,7 @@ strong { font-weight: 600; }
 
 .app-table tbody tr:last-child td { border-bottom: none; }
 
-.app-table tbody tr:hover td { background: rgba(0,0,0,.02); }
+.app-table tbody tr:hover td { background: var(--surface-hover); }
 
 .student-name {
   display: flex;
@@ -502,15 +596,26 @@ strong { font-weight: 600; }
   border-radius: var(--ant-radius-xs);
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid transparent;
+  border: 1px solid var(--color-transparent);
   line-height: 20px;
   white-space: nowrap;
 }
 
-.status-badge--activo  { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
-.status-badge--becado  { color: #1677ff; background: #e6f4ff; border-color: #91caff; }
-.status-badge--egresado{ color: #d48806; background: #fffbe6; border-color: #ffe58f; }
-.status-badge--inactivo{ color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
+.status-badge--activo  { color: var(--status-active-text); background: var(--status-active-bg); border-color: var(--status-active-border); }
+.status-badge--becado  { color: var(--status-scholar-text); background: var(--status-scholar-bg); border-color: var(--status-scholar-border); }
+.status-badge--egresado{ color: var(--status-graduate-text); background: var(--status-graduate-bg); border-color: var(--status-graduate-border); }
+.status-badge--inactivo{ color: var(--status-inactive-text); background: var(--status-inactive-bg); border-color: var(--status-inactive-border); }
+.status-badge--neutral { color: var(--status-neutral-text); background: var(--status-neutral-bg); border-color: var(--status-neutral-border); }
+
+.map-popup-muted {
+  color: var(--popup-muted);
+  font-size: 12px;
+}
+
+.leaflet-popup-content .status-badge {
+  margin-top: 4px;
+  font-size: 11px;
+}
 
 .table-actions {
   display: flex;
@@ -665,7 +770,7 @@ body.modal-is-open { overflow: hidden; }
   align-items: flex-start;
   justify-content: center;
   padding: 40px 16px;
-  background: rgba(0,0,0,.45);
+  background: var(--modal-backdrop);
   overflow-y: auto;
 }
 
@@ -770,7 +875,7 @@ body.modal-is-open { overflow: hidden; }
 
 .app-input:focus-visible {
   border-color: var(--ant-primary) !important;
-  box-shadow: 0 0 0 2px rgba(5,145,255,.1) !important;
+  box-shadow: 0 0 0 2px var(--focus-ring) !important;
 }
 
 .app-textarea {
@@ -796,7 +901,7 @@ body.modal-is-open { overflow: hidden; }
 
 .is-invalid-field:focus-visible {
   border-color: var(--ant-error) !important;
-  box-shadow: 0 0 0 2px rgba(255,77,79,.1) !important;
+  box-shadow: 0 0 0 2px var(--danger-focus-ring) !important;
 }
 
 .location-panel {
@@ -839,7 +944,7 @@ body.modal-is-open { overflow: hidden; }
   gap: 4px;
   border: 1px dashed var(--ant-border);
   border-radius: var(--ant-radius-sm);
-  background: rgba(255,255,255,.88);
+  background: var(--map-empty-bg);
   color: var(--ant-text-secondary);
   text-align: center;
   pointer-events: none;
@@ -898,7 +1003,7 @@ body.modal-is-open { overflow: hidden; }
   border-radius: var(--ant-radius-sm);
   font-size: 14px;
   font-weight: 500;
-  border: 1px solid transparent;
+  border: 1px solid var(--color-transparent);
   cursor: pointer;
   transition: all var(--ant-motion-fast);
   white-space: nowrap;
@@ -910,7 +1015,7 @@ body.modal-is-open { overflow: hidden; }
   width: 13px;
   height: 13px;
   border: 2px solid currentColor;
-  border-right-color: transparent;
+  border-right-color: var(--color-transparent);
   border-radius: 50%;
   animation: spin .8s linear infinite;
 }
@@ -923,13 +1028,13 @@ body.modal-is-open { overflow: hidden; }
 .app-primary-button {
   background: var(--ant-primary);
   border-color: var(--ant-primary);
-  color: #fff;
+  color: var(--color-white);
 }
 .app-primary-button:hover,
 .app-primary-button:focus-visible {
   background: var(--ant-primary-hover);
   border-color: var(--ant-primary-hover);
-  color: #fff;
+  color: var(--color-white);
 }
 
 /* Secondary / Default */
@@ -955,42 +1060,42 @@ body.modal-is-open { overflow: hidden; }
 .app-danger-button:focus-visible {
   background: var(--ant-error);
   border-color: var(--ant-error);
-  color: #fff;
+  color: var(--color-white);
 }
 
-/* Variantes dentro del hero (fondo azul) */
+/* Variantes dentro del hero */
 .hero-panel .app-primary-button {
-  background: #fff;
-  border-color: #fff;
+  background: var(--color-white);
+  border-color: var(--color-white);
   color: var(--ant-primary);
 }
 .hero-panel .app-primary-button:hover {
-  background: rgba(255,255,255,.9);
+  background: var(--hero-button-hover);
   color: var(--ant-primary);
 }
 .hero-panel .app-secondary-button {
-  background: rgba(255,255,255,.15);
-  border-color: rgba(255,255,255,.3);
-  color: #fff;
+  background: var(--hero-button-bg);
+  border-color: var(--hero-button-border);
+  color: var(--hero-text);
 }
 .hero-panel .app-secondary-button:hover {
-  background: rgba(255,255,255,.25);
-  color: #fff;
+  background: var(--hero-button-bg-hover);
+  color: var(--hero-text);
 }
 .hero-panel .app-danger-button {
-  background: rgba(255,255,255,.12);
-  border-color: rgba(255,255,255,.35);
-  color: #fff;
+  background: var(--hero-button-bg);
+  border-color: var(--hero-button-border);
+  color: var(--hero-text);
 }
 .hero-panel .app-danger-button:hover {
   background: var(--ant-error);
   border-color: var(--ant-error);
-  color: #fff;
+  color: var(--color-white);
 }
 
 /* Ghost / Link */
 .app-ghost-button {
-  background: transparent;
+  background: var(--color-transparent);
   border-color: var(--ant-primary);
   color: var(--ant-primary);
 }

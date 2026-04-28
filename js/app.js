@@ -35,11 +35,28 @@ const DEFAULT_FILTERS = {
   status: "",
 };
 
-const STATUS_COLORS = {
-  Activo:   "#52c41a",
-  Becado:   "#1677ff",
-  Egresado: "#fa8c16",
-  Inactivo: "#ff4d4f",
+const STATUS_THEME = {
+  Activo: {
+    markerColor: "--status-active-marker",
+    badgeClass: "status-badge--activo",
+  },
+  Becado: {
+    markerColor: "--status-scholar-marker",
+    badgeClass: "status-badge--becado",
+  },
+  Egresado: {
+    markerColor: "--status-graduate-marker",
+    badgeClass: "status-badge--egresado",
+  },
+  Inactivo: {
+    markerColor: "--status-inactive-marker",
+    badgeClass: "status-badge--inactivo",
+  },
+};
+
+const DEFAULT_STATUS_THEME = {
+  markerColor: "--status-neutral-marker",
+  badgeClass: "status-badge--neutral",
 };
 
 const DOM = {
@@ -122,6 +139,50 @@ function studentHasLocation(student) {
     Boolean(String(student?.ubicacionTexto ?? "").trim()) ||
     Boolean(getStudentCoordinates(student))
   );
+}
+
+function getCssVariable(variableName, fallbackVariableName = "") {
+  const styles = getComputedStyle(document.documentElement);
+  const value = resolveCssVariable(styles, variableName);
+
+  if (value) {
+    return value;
+  }
+
+  if (fallbackVariableName) {
+    return resolveCssVariable(styles, fallbackVariableName) || styles.color;
+  }
+
+  return styles.color;
+}
+
+function resolveCssVariable(styles, variableName) {
+  let value = styles.getPropertyValue(variableName).trim();
+
+  for (let depth = 0; depth < 3 && value.startsWith("var("); depth += 1) {
+    const nestedVariable = value.match(/^var\((--[\w-]+)\)$/)?.[1];
+
+    if (!nestedVariable) {
+      break;
+    }
+
+    value = styles.getPropertyValue(nestedVariable).trim();
+  }
+
+  return value;
+}
+
+function getStatusTheme(status) {
+  return STATUS_THEME[status] ?? DEFAULT_STATUS_THEME;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 /**
@@ -254,25 +315,27 @@ function updateStudentsMap(students) {
   }
 
   located.forEach(({ student, coordinates }) => {
-    const color = STATUS_COLORS[student.estado] ?? "#8c8c8c";
+    const statusTheme = getStatusTheme(student.estado);
+    const color = getCssVariable(
+      statusTheme.markerColor,
+      DEFAULT_STATUS_THEME.markerColor
+    );
     const marker = L.circleMarker([coordinates.lat, coordinates.lng], {
       radius: 9,
       fillColor: color,
-      color: "#fff",
+      color: getCssVariable("--leaflet-marker-ring", "--color-surface"),
       weight: 2,
       opacity: 1,
       fillOpacity: 0.88,
     });
 
     marker.bindPopup(`
-      <strong>${student.nombres} ${student.apellidos}</strong><br/>
-      <span style="color:#666;font-size:12px">${student.carnet}</span><br/>
-      <span style="color:#666;font-size:12px">${student.carrera}</span><br/>
-      <span style="
-        display:inline-block;margin-top:4px;padding:1px 8px;
-        border-radius:4px;font-size:11px;font-weight:600;
-        background:${color}22;color:${color};border:1px solid ${color}66
-      ">${student.estado}</span>
+      <strong>${escapeHtml(student.nombres)} ${escapeHtml(student.apellidos)}</strong><br/>
+      <span class="map-popup-muted">${escapeHtml(student.carnet)}</span><br/>
+      <span class="map-popup-muted">${escapeHtml(student.carrera)}</span><br/>
+      <span class="status-badge ${statusTheme.badgeClass}">
+        ${escapeHtml(student.estado)}
+      </span>
     `);
 
     STATE.studentsMapLayer.addLayer(marker);
