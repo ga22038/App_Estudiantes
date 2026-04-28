@@ -26,6 +26,7 @@ import {
   showFeedback,
   renderStorageStatus,
   renderCareerOptions,
+  formatCareerName,
 } from "./ui.js";
 import { requestCurrentCoordinates, reverseGeocodeCoordinates } from "./api.js";
 
@@ -213,7 +214,26 @@ function initLocationMap() {
     });
   }
 
-  STATE.map.invalidateSize();
+  refreshLocationMapLayout();
+}
+
+function refreshLocationMapLayout() {
+  window.requestAnimationFrame(() => {
+    STATE.map?.invalidateSize();
+  });
+
+  window.setTimeout(() => {
+    STATE.map?.invalidateSize();
+  }, 150);
+}
+
+function createLocationMarkerIcon() {
+  return L.divIcon({
+    className: "student-location-marker",
+    html: '<span aria-hidden="true"></span>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
 }
 
 /**
@@ -225,10 +245,17 @@ function initLocationMap() {
 function setMapMarker(lat, lng) {
   if (STATE.mapMarker) {
     STATE.mapMarker.setLatLng([lat, lng]);
+    STATE.mapMarker.addTo(STATE.map);
+    refreshLocationMapLayout();
     return;
   }
 
-  STATE.mapMarker = L.marker([lat, lng], { draggable: true }).addTo(STATE.map);
+  STATE.mapMarker = L.marker([lat, lng], {
+    draggable: true,
+    icon: createLocationMarkerIcon(),
+  }).addTo(STATE.map);
+
+  refreshLocationMapLayout();
 
   STATE.mapMarker.on("dragend", async (event) => {
     const pos = event.target.getLatLng();
@@ -259,7 +286,7 @@ function fillFormCoordinates(lat, lng) {
 }
 
 /**
- * Llama al API de geocodificacion inversa y rellena la descripcion de ubicacion.
+ * Llama al API de geocodificación inversa y rellena la descripción de ubicación.
  *
  * @param {number} lat
  * @param {number} lng
@@ -269,7 +296,7 @@ async function geocodeMapPoint(lat, lng) {
   try {
     const result = await reverseGeocodeCoordinates(lat, lng);
     DOM.studentForm.elements.namedItem("ubicacionTexto").value = result.label;
-    renderLocationStatus(DOM.locationStatus, "Ubicacion seleccionada correctamente.");
+    renderLocationStatus(DOM.locationStatus, "Ubicación seleccionada correctamente.");
     persistDraftFromForm();
   } catch {
     renderLocationStatus(DOM.locationStatus, "No se pudo obtener el nombre. Puedes escribirlo manualmente.");
@@ -332,7 +359,7 @@ function updateStudentsMap(students) {
     marker.bindPopup(`
       <strong>${escapeHtml(student.nombres)} ${escapeHtml(student.apellidos)}</strong><br/>
       <span class="map-popup-muted">${escapeHtml(student.carnet)}</span><br/>
-      <span class="map-popup-muted">${escapeHtml(student.carrera)}</span><br/>
+      <span class="map-popup-muted">${escapeHtml(formatCareerName(student.carrera))}</span><br/>
       <span class="status-badge ${statusTheme.badgeClass}">
         ${escapeHtml(student.estado)}
       </span>
@@ -362,7 +389,7 @@ function updateStudentsMap(students) {
 }
 
 /**
- * Punto de entrada principal de la aplicacion.
+ * Punto de entrada principal de la aplicación.
  */
 function init() {
   STATE.students = getStudents();
@@ -396,7 +423,7 @@ function bindEvents() {
     persistFilters();
     hydrateFilterInputs();
     renderApplication();
-    notify("success", "Filtros reiniciados", "Se limpio la vista filtrada.");
+    notify("success", "Filtros reiniciados", "Se limpió la vista filtrada.");
   });
 
   DOM.searchInput?.addEventListener("input", (event) => {
@@ -493,7 +520,7 @@ function bindEvents() {
 }
 
 /**
- * Configura el worker que calcula metricas del dashboard.
+ * Configura el worker que calcula métricas del dashboard.
  */
 function setupWorker() {
   try {
@@ -518,13 +545,13 @@ function setupWorker() {
     notify(
       "warning",
       "Worker no disponible",
-      "Las metricas se calcularan en el hilo principal como respaldo."
+      "Las métricas se calcularán en el hilo principal como respaldo."
     );
   }
 }
 
 /**
- * Renderiza todos los bloques reactivos de la aplicacion.
+ * Renderiza todos los bloques reactivos de la aplicación.
  */
 function renderApplication() {
   try {
@@ -549,7 +576,7 @@ function renderApplication() {
     );
     updateMetrics(STATE.filteredStudents);
   } catch (error) {
-    console.error("Error al renderizar la aplicacion.", error);
+    console.error("Error al renderizar la aplicación.", error);
     notify(
       "error",
       "Error de interfaz",
@@ -600,7 +627,7 @@ function hydrateFilterInputs() {
 }
 
 /**
- * Abre el modal en modo creacion, usando borrador si existe.
+ * Abre el modal en modo creación, usando borrador si existe.
  */
 function openCreateModal() {
   STATE.editingId = null;
@@ -608,7 +635,7 @@ function openCreateModal() {
   renderModalMeta(getModalNodes(), false);
   renderLocationStatus(
     DOM.locationStatus,
-    "La ubicacion es opcional y no bloquea el guardado."
+    "La ubicación es opcional y no bloquea el guardado."
   );
 
   const draft = getDraft();
@@ -616,23 +643,23 @@ function openCreateModal() {
   if (draft.mode === "create" && draft.values) {
     populateForm(DOM.studentForm, draft.values);
     DOM.formStatusText.textContent =
-      "Se recupero el borrador guardado en la sesion actual.";
+      "Se recuperó el borrador guardado en la sesión actual.";
   } else {
     DOM.formStatusText.textContent =
       "El formulario guarda borrador en sessionStorage.";
   }
 
+  removeMapMarker();
   toggleModal(DOM.studentModal, true);
   window.setTimeout(() => {
     initLocationMap();
-    removeMapMarker();
     STATE.map?.setView([13.7942, -88.8965], 7);
   }, 0);
   DOM.studentForm.elements.namedItem("carnet")?.focus();
 }
 
 /**
- * Abre el modal en modo edicion.
+ * Abre el modal en modo edición.
  *
  * @param {string} studentId
  */
@@ -652,7 +679,7 @@ function openEditModal(studentId) {
   if (draft.mode === "edit" && draft.studentId === studentId && draft.values) {
     populateForm(DOM.studentForm, draft.values);
     DOM.formStatusText.textContent =
-      "Se recupero un borrador de edicion pendiente de la sesion.";
+      "Se recuperó un borrador de edición pendiente de la sesión.";
   } else {
     populateForm(DOM.studentForm, student);
     DOM.formStatusText.textContent =
@@ -662,8 +689,8 @@ function openEditModal(studentId) {
   renderLocationStatus(
     DOM.locationStatus,
     student.ubicacionTexto
-      ? "Puedes recapturar la ubicacion si deseas actualizarla."
-      : "Este estudiante aun no tiene una ubicacion capturada."
+      ? "Puedes recapturar la ubicación si deseas actualizarla."
+      : "Este estudiante aún no tiene una ubicación capturada."
   );
 
   toggleModal(DOM.studentModal, true);
@@ -699,8 +726,8 @@ function requestConfirmation({
   if (!DOM.confirmModal) {
     notify(
       "error",
-      "Confirmacion no disponible",
-      "No se encontro el modal de confirmacion en la pagina."
+      "Confirmación no disponible",
+      "No se encontró el modal de confirmación en la página."
     );
     return Promise.resolve(false);
   }
@@ -790,7 +817,7 @@ function saveStudentFromForm() {
       : [studentToSave, ...STATE.students];
 
     if (!saveStudents(nextStudents)) {
-      throw new Error("No se pudo guardar la informacion en localStorage.");
+      throw new Error("No se pudo guardar la información en localStorage.");
     }
 
     STATE.students = sortStudents(nextStudents);
@@ -812,13 +839,13 @@ function saveStudentFromForm() {
     notify(
       "error",
       "No fue posible guardar",
-      "Ocurrio un problema al intentar persistir el estudiante."
+      "Ocurrió un problema al intentar persistir el estudiante."
     );
   }
 }
 
 /**
- * Elimina un estudiante previa confirmacion.
+ * Elimina un estudiante previa confirmación.
  *
  * @param {string} studentId
  */
@@ -832,7 +859,7 @@ async function deleteStudent(studentId) {
 
   const confirmed = await requestConfirmation({
     title: "Eliminar estudiante",
-    message: `Se eliminara a ${student.nombres} ${student.apellidos}. Esta accion no se puede deshacer.`,
+    message: `Se eliminará a ${student.nombres} ${student.apellidos}. Esta acción no se puede deshacer.`,
     confirmText: "Eliminar",
     tone: "danger",
   });
@@ -845,7 +872,7 @@ async function deleteStudent(studentId) {
     const nextStudents = STATE.students.filter((candidate) => candidate.id !== studentId);
 
     if (!saveStudents(nextStudents)) {
-      throw new Error("No se pudo actualizar localStorage despues de eliminar.");
+      throw new Error("No se pudo actualizar localStorage después de eliminar.");
     }
 
     STATE.students = nextStudents;
@@ -862,7 +889,7 @@ async function deleteStudent(studentId) {
     notify(
       "error",
       "No fue posible eliminar",
-      "Ocurrio un problema al intentar borrar el estudiante."
+      "Ocurrió un problema al intentar borrar el estudiante."
     );
   }
 }
@@ -876,8 +903,8 @@ async function loadDemoStudents() {
       ? "Agregar datos de ejemplo"
       : "Cargar datos de ejemplo",
     message: STATE.students.length
-      ? "Ya hay registros guardados. Se agregaran datos de ejemplo sin borrar lo actual."
-      : "Se cargaran estudiantes de ejemplo para la demostracion.",
+      ? "Ya hay registros guardados. Se agregarán datos de ejemplo sin borrar lo actual."
+      : "Se cargarán estudiantes de ejemplo para la demostración.",
     confirmText: STATE.students.length ? "Agregar demo" : "Cargar demo",
     tone: "warning",
   });
@@ -895,7 +922,7 @@ async function loadDemoStudents() {
       edad: 21,
       telefono: "7001-2003",
       direccion: "Colonia El Triunfo, Santa Ana",
-      encargado: "Maria Rivas",
+      encargado: "María Rivas",
       correoInstitucional: "daniela.rivas@ues.edu.sv",
       carrera: "Ingenieria en Desarrollo de Software",
       ciclo: "06",
@@ -910,11 +937,11 @@ async function loadDemoStudents() {
       id: createStudentId(),
       carnet: "UES-2026-002",
       nombres: "Luis",
-      apellidos: "Mendez",
+      apellidos: "Méndez",
       edad: 18,
       telefono: "7110-4412",
-      direccion: "Barrio San Sebastian, Sonsonate",
-      encargado: "Carlos Mendez",
+      direccion: "Barrio San Sebastián, Sonsonate",
+      encargado: "Carlos Méndez",
       correoInstitucional: "luis.mendez@ues.edu.sv",
       carrera: "Arquitectura",
       ciclo: "03",
@@ -929,11 +956,11 @@ async function loadDemoStudents() {
       id: createStudentId(),
       carnet: "UES-2026-003",
       nombres: "Andrea",
-      apellidos: "Gonzalez",
+      apellidos: "González",
       edad: 24,
       telefono: "7288-0041",
-      direccion: "Residencial Nueva Esperanza, Ahuachapan",
-      encargado: "Rosa Gonzalez",
+      direccion: "Residencial Nueva Esperanza, Ahuachapán",
+      encargado: "Rosa González",
       correoInstitucional: "andrea.gonzalez@ues.edu.sv",
       carrera: "Administracion de Empresas",
       ciclo: "08",
@@ -942,7 +969,7 @@ async function loadDemoStudents() {
       fechaRegistro: new Date().toISOString(),
       latitud: 13.92139,
       longitud: -89.845,
-      ubicacionTexto: "Ahuachapan, El Salvador",
+      ubicacionTexto: "Ahuachapán, El Salvador",
     },
   ];
 
@@ -960,7 +987,7 @@ async function loadDemoStudents() {
     notify(
       "error",
       "No fue posible cargar la demo",
-      "No se pudo persistir la informacion de ejemplo."
+      "No se pudo persistir la información de ejemplo."
     );
     return;
   }
@@ -970,7 +997,7 @@ async function loadDemoStudents() {
   notify(
     "success",
     "Datos de ejemplo listos",
-    "La tabla fue poblada con estudiantes para tu presentacion."
+    "La tabla fue poblada con estudiantes para tu presentación."
   );
 }
 
@@ -980,7 +1007,7 @@ async function loadDemoStudents() {
 async function clearAllStudents() {
   const confirmed = await requestConfirmation({
     title: "Limpiar registros",
-    message: "Se eliminaran todos los registros del localStorage. Esta accion no se puede deshacer.",
+    message: "Se eliminarán todos los registros del localStorage. Esta acción no se puede deshacer.",
     confirmText: "Limpiar registros",
     tone: "danger",
   });
@@ -1005,20 +1032,20 @@ async function clearAllStudents() {
     notify(
       "success",
       "Registros eliminados",
-      "La aplicacion volvio al estado inicial."
+      "La aplicación volvió al estado inicial."
     );
   } catch (error) {
     console.error("Error al limpiar los registros.", error);
     notify(
       "error",
       "No fue posible limpiar",
-      "Ocurrio un problema al reiniciar los datos guardados."
+      "Ocurrió un problema al reiniciar los datos guardados."
     );
   }
 }
 
 /**
- * Captura geolocalizacion, llama a fetch y actualiza el formulario.
+ * Captura geolocalización, llama a fetch y actualiza el formulario.
  */
 async function resolveLocationForForm() {
   const idleButtonContent = DOM.locationButton.innerHTML;
@@ -1028,7 +1055,7 @@ async function resolveLocationForForm() {
     '<span class="button-spinner" aria-hidden="true"></span> Buscando GPS...';
   renderLocationStatus(
     DOM.locationStatus,
-    "Solicitando permisos y consultando la ubicacion actual..."
+    "Solicitando permisos y consultando la ubicación actual..."
   );
 
   try {
@@ -1040,7 +1067,7 @@ async function resolveLocationForForm() {
 
     renderLocationStatus(
       DOM.locationStatus,
-      "Posicion obtenida. Traduciendo coordenadas con fetch..."
+      "Posición obtenida. Traduciendo coordenadas con fetch..."
     );
 
     const geocodeResult = await reverseGeocodeCoordinates(
@@ -1051,19 +1078,19 @@ async function resolveLocationForForm() {
     DOM.studentForm.elements.namedItem("ubicacionTexto").value = geocodeResult.label;
     renderLocationStatus(
       DOM.locationStatus,
-      "Ubicacion capturada correctamente desde la API JSON."
+      "Ubicación capturada correctamente desde la API JSON."
     );
     persistDraftFromForm();
   } catch (error) {
-    console.error("Error al resolver la ubicacion.", error);
+    console.error("Error al resolver la ubicación.", error);
     renderLocationStatus(
       DOM.locationStatus,
-      `${error.message} Puedes escribir la ubicacion manualmente.`
+      `${error.message} Puedes escribir la ubicación manualmente.`
     );
     notify(
       "warning",
-      "Ubicacion parcial",
-      "No se pudo completar la geolocalizacion, pero el formulario sigue disponible."
+      "Ubicación parcial",
+      "No se pudo completar la geolocalización, pero el formulario sigue disponible."
     );
   } finally {
     DOM.locationButton.disabled = false;
@@ -1098,7 +1125,7 @@ function persistFilters() {
 }
 
 /**
- * Calcula metricas con Web Worker o usando respaldo local si falla.
+ * Calcula métricas con Web Worker o usando respaldo local si falla.
  *
  * @param {Array<object>} students
  */
@@ -1183,7 +1210,7 @@ function renderStorageMeta() {
 }
 
 /**
- * Busca el ultimo estudiante que tenga ubicacion registrada.
+ * Busca el último estudiante que tenga ubicación registrada.
  *
  * @param {Array<object>} students
  * @returns {object|null}
@@ -1199,7 +1226,7 @@ function findLatestLocatedStudent(students) {
 }
 
 /**
- * Calcula metricas localmente como respaldo del worker.
+ * Calcula métricas localmente como respaldo del worker.
  *
  * @param {Array<object>} students
  * @returns {Record<string, any>}

@@ -1,5 +1,5 @@
 /**
- * Claves publicas del almacenamiento utilizadas por la aplicacion.
+ * Claves públicas del almacenamiento utilizadas por la aplicación.
  */
 export const STORAGE_KEYS = Object.freeze({
   students: "students_registry_v1",
@@ -112,7 +112,7 @@ export function getFilters() {
 }
 
 /**
- * Persiste la configuracion actual de filtros.
+ * Persiste la configuración actual de filtros.
  *
  * @param {{ search: string, career: string, status: string }} filters
  * @returns {boolean}
@@ -122,12 +122,12 @@ export function saveFilters(filters) {
 }
 
 /**
- * Elimina los filtros de la sesion actual.
+ * Elimina los filtros de la sesión actual.
  */
 export function clearFilters() {
   try {
     window.sessionStorage.removeItem(STORAGE_KEYS.filters);
   } catch (error) {
-    console.error("No fue posible limpiar los filtros de la sesion.", error);
+    console.error("No fue posible limpiar los filtros de la sesión.", error);
   }
 }
