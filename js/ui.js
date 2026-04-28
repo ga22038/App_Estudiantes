@@ -86,38 +86,38 @@ export function renderStudentTable(tableBody, students) {
 
       return `
         <tr>
-          <td>
+          <td data-label="Carnet">
             <strong>${escapeHtml(student.carnet)}</strong>
             <div class="cell-muted">${formatDate(student.fechaRegistro)}</div>
           </td>
-          <td>
+          <td data-label="Estudiante">
             <div class="student-name">
               <strong>${fullName}</strong>
               <span>${escapeHtml(student.correoInstitucional)}</span>
             </div>
           </td>
-          <td>
+          <td data-label="Carrera">
             <div class="student-name">
               <strong>${escapeHtml(student.carrera)}</strong>
               <span>Ciclo ${escapeHtml(student.ciclo)}</span>
             </div>
           </td>
-          <td>
+          <td data-label="Estado">
             <span class="${resolveStatusClass(student.estado)}">
               ${escapeHtml(student.estado)}
             </span>
           </td>
-          <td>
+          <td data-label="Promedio">
             <strong>${Number(student.promedio ?? 0).toFixed(2)}</strong>
             <div class="cell-muted">${escapeHtml(String(student.edad))} anios</div>
           </td>
-          <td>
+          <td data-label="Ubicacion">
             <div class="student-name">
               <strong>${locationLabel}</strong>
               <span>${escapeHtml(student.telefono)}</span>
             </div>
           </td>
-          <td>
+          <td data-label="Acciones">
             <div class="table-actions">
               <button
                 type="button"
@@ -395,16 +395,19 @@ export function renderCareerOptions(select, careers, selectedValue = "") {
   const uniqueCareers = [...new Set(careers.filter(Boolean))].sort((left, right) =>
     left.localeCompare(right)
   );
+  const optionsSignature = JSON.stringify(uniqueCareers);
 
-  select.innerHTML = `
-    <option value="">Todas las carreras</option>
-    ${uniqueCareers
-      .map((career) => {
-        const isSelected = career === selectedValue ? "selected" : "";
-        return `<option value="${escapeHtml(career)}" ${isSelected}>${escapeHtml(
-          career
-        )}</option>`;
-      })
-      .join("")}
-  `;
+  if (select.dataset.optionsSignature !== optionsSignature) {
+    select.innerHTML = `
+      <option value="">Todas las carreras</option>
+      ${uniqueCareers
+        .map((career) => {
+          return `<option value="${escapeHtml(career)}">${escapeHtml(career)}</option>`;
+        })
+        .join("")}
+    `;
+    select.dataset.optionsSignature = optionsSignature;
+  }
+
+  select.value = selectedValue;
 }

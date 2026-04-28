@@ -75,6 +75,13 @@ const DOM = {
   metricLocated: document.querySelector("#metricLocated"),
   studentsMap: document.querySelector("#studentsMap"),
   mapStudentCount: document.querySelector("#mapStudentCount"),
+  studentsMapEmpty: document.querySelector("#studentsMapEmpty"),
+  confirmModal: document.querySelector("#confirmModal"),
+  confirmTitle: document.querySelector("#confirmTitle"),
+  confirmMessage: document.querySelector("#confirmMessage"),
+  confirmIcon: document.querySelector("#confirmIcon"),
+  confirmOkButton: document.querySelector("#confirmOkButton"),
+  confirmCancelButton: document.querySelector("#confirmCancelButton"),
 };
 
 const STATE = {
@@ -87,7 +94,35 @@ const STATE = {
   mapMarker: null,
   studentsMap: null,
   studentsMapLayer: null,
+  pendingConfirmation: null,
 };
+
+function hasValidCoordinateValue(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string" && value.trim() === "") return false;
+  return Number.isFinite(Number(value));
+}
+
+function getStudentCoordinates(student) {
+  if (
+    !hasValidCoordinateValue(student?.latitud) ||
+    !hasValidCoordinateValue(student?.longitud)
+  ) {
+    return null;
+  }
+
+  return {
+    lat: Number(student.latitud),
+    lng: Number(student.longitud),
+  };
+}
+
+function studentHasLocation(student) {
+  return (
+    Boolean(String(student?.ubicacionTexto ?? "").trim()) ||
+    Boolean(getStudentCoordinates(student))
+  );
+}
 
 /**
  * Inicializa el mapa Leaflet dentro del modal la primera vez que se abre.
@@ -206,13 +241,21 @@ function updateStudentsMap(students) {
 
   STATE.studentsMapLayer.clearLayers();
 
-  const located = students.filter(
-    (s) => s.latitud && s.longitud && !isNaN(Number(s.latitud))
-  );
+  const located = students.reduce((accumulator, student) => {
+    const coordinates = getStudentCoordinates(student);
+    if (coordinates) {
+      accumulator.push({ student, coordinates });
+    }
+    return accumulator;
+  }, []);
 
-  located.forEach((student) => {
+  if (DOM.studentsMapEmpty) {
+    DOM.studentsMapEmpty.hidden = located.length > 0;
+  }
+
+  located.forEach(({ student, coordinates }) => {
     const color = STATUS_COLORS[student.estado] ?? "#8c8c8c";
-    const marker = L.circleMarker([Number(student.latitud), Number(student.longitud)], {
+    const marker = L.circleMarker([coordinates.lat, coordinates.lng], {
       radius: 9,
       fillColor: color,
       color: "#fff",
@@ -242,14 +285,16 @@ function updateStudentsMap(students) {
 
   if (located.length > 1) {
     const bounds = L.featureGroup(
-      located.map((s) => L.circleMarker([Number(s.latitud), Number(s.longitud)]))
+      located.map(({ coordinates }) => L.circleMarker([coordinates.lat, coordinates.lng]))
     ).getBounds();
     STATE.studentsMap.fitBounds(bounds, { padding: [40, 40] });
   } else if (located.length === 1) {
     STATE.studentsMap.setView(
-      [Number(located[0].latitud), Number(located[0].longitud)],
+      [located[0].coordinates.lat, located[0].coordinates.lng],
       13
     );
+  } else {
+    STATE.studentsMap.setView([13.7942, -88.8965], 7);
   }
 }
 
@@ -337,7 +382,16 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !DOM.studentModal.hidden) {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    if (DOM.confirmModal && !DOM.confirmModal.hidden) {
+      settleConfirmation(false);
+      return;
+    }
+
+    if (DOM.studentModal && !DOM.studentModal.hidden) {
       closeModal();
     }
   });
@@ -358,6 +412,20 @@ function bindEvents() {
 
   DOM.locationButton?.addEventListener("click", async () => {
     await resolveLocationForForm();
+  });
+
+  DOM.confirmOkButton?.addEventListener("click", () => {
+    settleConfirmation(true);
+  });
+
+  DOM.confirmCancelButton?.addEventListener("click", () => {
+    settleConfirmation(false);
+  });
+
+  DOM.confirmModal?.addEventListener("click", (event) => {
+    if (event.target === DOM.confirmModal) {
+      settleConfirmation(false);
+    }
   });
 }
 
@@ -464,6 +532,7 @@ function applyFilters(students, filters) {
  */
 function hydrateFilterInputs() {
   DOM.searchInput.value = STATE.filters.search;
+  DOM.careerFilter.value = STATE.filters.career;
   DOM.statusFilter.value = STATE.filters.status;
 }
 
@@ -537,11 +606,10 @@ function openEditModal(studentId) {
   toggleModal(DOM.studentModal, true);
   window.setTimeout(() => {
     initLocationMap();
-    const lat = Number(student.latitud);
-    const lng = Number(student.longitud);
-    if (lat && lng) {
-      setMapMarker(lat, lng);
-      STATE.map.setView([lat, lng], 13);
+    const coordinates = getStudentCoordinates(student);
+    if (coordinates) {
+      setMapMarker(coordinates.lat, coordinates.lng);
+      STATE.map.setView([coordinates.lat, coordinates.lng], 13);
     } else {
       removeMapMarker();
       STATE.map?.setView([13.7942, -88.8965], 7);
@@ -556,6 +624,65 @@ function openEditModal(studentId) {
 function closeModal() {
   toggleModal(DOM.studentModal, false);
   clearFormErrors(DOM.studentForm);
+}
+
+function requestConfirmation({
+  title,
+  message,
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  tone = "danger",
+}) {
+  if (!DOM.confirmModal) {
+    notify(
+      "error",
+      "Confirmacion no disponible",
+      "No se encontro el modal de confirmacion en la pagina."
+    );
+    return Promise.resolve(false);
+  }
+
+  if (STATE.pendingConfirmation) {
+    settleConfirmation(false);
+  }
+
+  const activeElement =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  DOM.confirmTitle.textContent = title;
+  DOM.confirmMessage.textContent = message;
+  DOM.confirmOkButton.textContent = confirmText;
+  DOM.confirmCancelButton.textContent = cancelText;
+  DOM.confirmOkButton.className = `btn ${
+    tone === "danger" ? "app-danger-button" : "app-primary-button"
+  }`;
+  DOM.confirmIcon.dataset.tone = tone;
+  DOM.confirmIcon.innerHTML =
+    tone === "danger"
+      ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+      : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>';
+
+  toggleModal(DOM.confirmModal, true);
+  window.setTimeout(() => DOM.confirmCancelButton.focus(), 0);
+
+  return new Promise((resolve) => {
+    STATE.pendingConfirmation = {
+      resolve,
+      activeElement,
+    };
+  });
+}
+
+function settleConfirmation(confirmed) {
+  if (!STATE.pendingConfirmation) {
+    return;
+  }
+
+  const { resolve, activeElement } = STATE.pendingConfirmation;
+  STATE.pendingConfirmation = null;
+  toggleModal(DOM.confirmModal, false);
+  resolve(confirmed);
+  activeElement?.focus?.();
 }
 
 /**
@@ -632,7 +759,7 @@ function saveStudentFromForm() {
  *
  * @param {string} studentId
  */
-function deleteStudent(studentId) {
+async function deleteStudent(studentId) {
   const student = STATE.students.find((candidate) => candidate.id === studentId);
 
   if (!student) {
@@ -640,9 +767,12 @@ function deleteStudent(studentId) {
     return;
   }
 
-  const confirmed = window.confirm(
-    `Se eliminara a ${student.nombres} ${student.apellidos}. Deseas continuar?`
-  );
+  const confirmed = await requestConfirmation({
+    title: "Eliminar estudiante",
+    message: `Se eliminara a ${student.nombres} ${student.apellidos}. Esta accion no se puede deshacer.`,
+    confirmText: "Eliminar",
+    tone: "danger",
+  });
 
   if (!confirmed) {
     return;
@@ -677,12 +807,17 @@ function deleteStudent(studentId) {
 /**
  * Carga datos de ejemplo utiles para una demo rapida del proyecto.
  */
-function loadDemoStudents() {
-  const shouldAppend = window.confirm(
-    STATE.students.length
-      ? "Ya hay registros guardados. Deseas agregar datos de ejemplo sin borrar lo actual?"
-      : "Se cargaran estudiantes de ejemplo para la demostracion. Continuar?"
-  );
+async function loadDemoStudents() {
+  const shouldAppend = await requestConfirmation({
+    title: STATE.students.length
+      ? "Agregar datos de ejemplo"
+      : "Cargar datos de ejemplo",
+    message: STATE.students.length
+      ? "Ya hay registros guardados. Se agregaran datos de ejemplo sin borrar lo actual."
+      : "Se cargaran estudiantes de ejemplo para la demostracion.",
+    confirmText: STATE.students.length ? "Agregar demo" : "Cargar demo",
+    tone: "warning",
+  });
 
   if (!shouldAppend) {
     return;
@@ -779,10 +914,13 @@ function loadDemoStudents() {
 /**
  * Elimina todos los estudiantes y reinicia la interfaz.
  */
-function clearAllStudents() {
-  const confirmed = window.confirm(
-    "Se eliminaran todos los registros del localStorage. Deseas continuar?"
-  );
+async function clearAllStudents() {
+  const confirmed = await requestConfirmation({
+    title: "Limpiar registros",
+    message: "Se eliminaran todos los registros del localStorage. Esta accion no se puede deshacer.",
+    confirmText: "Limpiar registros",
+    tone: "danger",
+  });
 
   if (!confirmed) {
     return;
@@ -820,7 +958,11 @@ function clearAllStudents() {
  * Captura geolocalizacion, llama a fetch y actualiza el formulario.
  */
 async function resolveLocationForForm() {
+  const idleButtonContent = DOM.locationButton.innerHTML;
   DOM.locationButton.disabled = true;
+  DOM.locationButton.setAttribute("aria-busy", "true");
+  DOM.locationButton.innerHTML =
+    '<span class="button-spinner" aria-hidden="true"></span> Buscando GPS...';
   renderLocationStatus(
     DOM.locationStatus,
     "Solicitando permisos y consultando la ubicacion actual..."
@@ -862,6 +1004,8 @@ async function resolveLocationForForm() {
     );
   } finally {
     DOM.locationButton.disabled = false;
+    DOM.locationButton.removeAttribute("aria-busy");
+    DOM.locationButton.innerHTML = idleButtonContent;
   }
 }
 
@@ -987,14 +1131,7 @@ function findLatestLocatedStudent(students) {
       .sort((left, right) => {
         return new Date(right.fechaRegistro).getTime() - new Date(left.fechaRegistro).getTime();
       })
-      .find(
-        (student) =>
-          student.ubicacionTexto ||
-          (student.latitud !== null &&
-            student.latitud !== "" &&
-            student.longitud !== null &&
-            student.longitud !== "")
-      ) ?? null
+      .find(studentHasLocation) ?? null
   );
 }
 
@@ -1025,13 +1162,7 @@ function computeMetricsFallback(students) {
       summary.menoresEdad += 1;
     }
 
-    if (
-      student.ubicacionTexto ||
-      (student.latitud !== null &&
-        student.latitud !== "" &&
-        student.longitud !== null &&
-        student.longitud !== "")
-    ) {
+    if (studentHasLocation(student)) {
       summary.conUbicacion += 1;
     }
   });

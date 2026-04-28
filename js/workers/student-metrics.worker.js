@@ -1,6 +1,20 @@
 /**
  * Worker dedicado a calcular metricas del dashboard sin bloquear la UI.
  */
+function hasValidCoordinateValue(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string" && value.trim() === "") return false;
+  return Number.isFinite(Number(value));
+}
+
+function studentHasLocation(student) {
+  return (
+    Boolean(String(student?.ubicacionTexto ?? "").trim()) ||
+    (hasValidCoordinateValue(student?.latitud) &&
+      hasValidCoordinateValue(student?.longitud))
+  );
+}
+
 self.onmessage = (event) => {
   const students = Array.isArray(event.data) ? event.data : [];
 
@@ -26,13 +40,7 @@ self.onmessage = (event) => {
       summary.menoresEdad += 1;
     }
 
-    if (
-      student.ubicacionTexto ||
-      (student.latitud !== null &&
-        student.latitud !== "" &&
-        student.longitud !== null &&
-        student.longitud !== "")
-    ) {
+    if (studentHasLocation(student)) {
       summary.conUbicacion += 1;
     }
 

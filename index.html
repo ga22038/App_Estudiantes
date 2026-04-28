@@ -39,20 +39,22 @@
             </p>
 
             <div class="hero-actions">
-              <button
-                id="newStudentButton"
-                type="button"
-                class="btn app-primary-button"
-              >
-                Nuevo estudiante
-              </button>
-              <button
-                id="demoButton"
-                type="button"
-                class="btn app-secondary-button"
-              >
-                Cargar datos de ejemplo
-              </button>
+              <div class="hero-actions-main">
+                <button
+                  id="newStudentButton"
+                  type="button"
+                  class="btn app-primary-button"
+                >
+                  Nuevo estudiante
+                </button>
+                <button
+                  id="demoButton"
+                  type="button"
+                  class="btn app-secondary-button"
+                >
+                  Cargar datos de ejemplo
+                </button>
+              </div>
               <button
                 id="clearAllButton"
                 type="button"
@@ -94,27 +96,27 @@
         <article class="metric-card">
           <span class="metric-label">Estudiantes activos</span>
           <strong id="metricActive" class="metric-value">0</strong>
-          <small class="metric-note">Conteo por estado</small>
+          <small class="metric-note">Segun filtros activos</small>
         </article>
         <article class="metric-card">
           <span class="metric-label">Estudiantes inactivos</span>
           <strong id="metricInactive" class="metric-value">0</strong>
-          <small class="metric-note">Seguimiento rapido</small>
+          <small class="metric-note">Segun filtros activos</small>
         </article>
         <article class="metric-card">
           <span class="metric-label">Promedio general</span>
           <strong id="metricAverage" class="metric-value">0.00</strong>
-          <small class="metric-note">Escala de 0 a 10</small>
+          <small class="metric-note">Vista filtrada, 0 a 10</small>
         </article>
         <article class="metric-card">
           <span class="metric-label">Mayores de edad</span>
           <strong id="metricAdults" class="metric-value">0</strong>
-          <small class="metric-note">Edad igual o mayor a 18</small>
+          <small class="metric-note">Segun filtros activos</small>
         </article>
         <article class="metric-card">
           <span class="metric-label">Con ubicacion capturada</span>
           <strong id="metricLocated" class="metric-value">0</strong>
-          <small class="metric-note">Geolocalizacion o texto manual</small>
+          <small class="metric-note">Segun filtros activos</small>
         </article>
       </section>
 
@@ -127,7 +129,13 @@
           </div>
           <span id="mapStudentCount" class="results-summary">0 marcadores</span>
         </div>
-        <div id="studentsMap" class="students-overview-map"></div>
+        <div class="students-map-frame">
+          <div id="studentsMap" class="students-overview-map"></div>
+          <div id="studentsMapEmpty" class="map-empty-state" hidden>
+            <strong>Sin ubicaciones para mostrar</strong>
+            <span>Agrega coordenadas o una ubicacion desde el formulario.</span>
+          </div>
+        </div>
       </section>
 
       <div class="workspace-grid">
@@ -252,21 +260,33 @@
           <section class="panel-surface">
             <div class="panel-head">
               <div>
-                <h2 class="panel-title">Mapa de requerimientos</h2>
+                <h2 class="panel-title">Acerca de esta app</h2>
                 <p class="panel-copy">
-                  Resumen rapido para defender el proyecto en clase.
+                  Informacion util del registro y sus datos locales.
                 </p>
               </div>
             </div>
             <ul class="requirement-list">
-              <li>CRUD completo con validaciones, eventos y manejo del DOM.</li>
-              <li>Metricas calculadas con Web Worker.</li>
-              <li>Datos persistidos con localStorage y sessionStorage.</li>
-              <li>Uso de fetch, geolocalizacion y respuesta JSON.</li>
-              <li>Interfaz documentada y modular para GitHub.</li>
+              <li>Los registros se guardan en este navegador.</li>
+              <li>Los filtros y borradores duran solo la sesion actual.</li>
+              <li>Las metricas respetan la vista filtrada.</li>
+              <li>Las ubicaciones se muestran cuando hay coordenadas validas.</li>
             </ul>
           </section>
         </aside>
+      </div>
+    </div>
+
+    <!-- Modal de confirmacion -->
+    <div id="confirmModal" class="app-modal-backdrop confirm-backdrop" hidden>
+      <div class="confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="confirm-icon" id="confirmIcon"></div>
+        <h3 id="confirmTitle" class="confirm-title"></h3>
+        <p id="confirmMessage" class="confirm-message"></p>
+        <div class="confirm-actions">
+          <button id="confirmCancelButton" type="button" class="btn app-secondary-button">Cancelar</button>
+          <button id="confirmOkButton" type="button" class="btn app-danger-button">Confirmar</button>
+        </div>
       </div>
     </div>
 

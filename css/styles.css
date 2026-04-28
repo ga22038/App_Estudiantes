@@ -160,8 +160,20 @@ strong { font-weight: 600; }
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-top: 20px;
+}
+
+.hero-actions-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero-actions > .app-danger-button {
+  margin-left: auto;
 }
 
 /* Panel lateral del hero — "Estado de la sesion" */
@@ -583,6 +595,64 @@ strong { font-weight: 600; }
 }
 
 /* ============================================================
+   Modal de confirmacion (Ant Design Popconfirm / Modal)
+   ============================================================ */
+.confirm-backdrop {
+  align-items: center;
+  padding: 16px;
+}
+
+.confirm-panel {
+  width: min(400px, 100%);
+  margin: auto;
+  padding: 28px 28px 24px;
+  border-radius: var(--ant-radius);
+  background: var(--ant-bg-container);
+  box-shadow: var(--ant-shadow);
+  text-align: center;
+  animation: modal-rise var(--ant-motion) ease;
+}
+
+.confirm-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ant-error-bg);
+  color: var(--ant-error);
+}
+
+.confirm-icon[data-tone="warning"] {
+  background: var(--ant-warning-bg);
+  color: var(--ant-warning);
+}
+
+.confirm-icon svg { display: block; }
+
+.confirm-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ant-text);
+}
+
+.confirm-message {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--ant-text-secondary);
+  line-height: 1.6;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ============================================================
    Modal (Ant Design Modal)
    ============================================================ */
 body.modal-is-open { overflow: hidden; }
@@ -696,6 +766,10 @@ body.modal-is-open { overflow: hidden; }
 
 .app-input:focus {
   border-color: var(--ant-primary) !important;
+}
+
+.app-input:focus-visible {
+  border-color: var(--ant-primary) !important;
   box-shadow: 0 0 0 2px rgba(5,145,255,.1) !important;
 }
 
@@ -718,6 +792,10 @@ body.modal-is-open { overflow: hidden; }
 .is-invalid-field:hover,
 .is-invalid-field:focus {
   border-color: var(--ant-error) !important;
+}
+
+.is-invalid-field:focus-visible {
+  border-color: var(--ant-error) !important;
   box-shadow: 0 0 0 2px rgba(255,77,79,.1) !important;
 }
 
@@ -728,17 +806,56 @@ body.modal-is-open { overflow: hidden; }
   background: var(--ant-bg-spot);
 }
 
-.student-map {
+.student-map,
+.students-overview-map {
   height: 280px;
   border-radius: var(--ant-radius-sm);
   border: 1px solid var(--ant-border);
   overflow: hidden;
   margin-bottom: 12px;
+}
+
+.student-map {
   cursor: crosshair;
+}
+
+.students-map-frame {
+  position: relative;
 }
 
 .students-overview-map {
   height: 360px;
+  margin-bottom: 0;
+}
+
+.map-empty-state {
+  position: absolute;
+  inset: 16px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px dashed var(--ant-border);
+  border-radius: var(--ant-radius-sm);
+  background: rgba(255,255,255,.88);
+  color: var(--ant-text-secondary);
+  text-align: center;
+  pointer-events: none;
+}
+
+.map-empty-state[hidden] {
+  display: none;
+}
+
+.map-empty-state strong {
+  color: var(--ant-text);
+  font-size: 14px;
+}
+
+.map-empty-state span {
+  font-size: 12px;
 }
 
 .location-panel-head {
@@ -787,6 +904,19 @@ body.modal-is-open { overflow: hidden; }
   white-space: nowrap;
   text-decoration: none;
   line-height: 1;
+}
+
+.button-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Primary */
@@ -906,6 +1036,19 @@ body.modal-is-open { overflow: hidden; }
   .modal-actions,
   .hero-actions { flex-direction: column; }
 
+  .hero-actions {
+    align-items: stretch;
+  }
+
+  .hero-actions-main {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-actions > .app-danger-button {
+    margin-left: 0;
+  }
+
   .app-primary-button,
   .app-secondary-button,
   .app-danger-button,
@@ -931,5 +1074,15 @@ body.modal-is-open { overflow: hidden; }
   }
 
   .app-table tbody td { padding: 6px 16px; border-bottom: none; }
-  .table-actions      { justify-content: flex-start; padding: 4px 16px 8px; }
+  .app-table tbody td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--ant-text-tertiary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .table-actions      { justify-content: flex-start; padding: 4px 0 8px; }
 }
