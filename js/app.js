@@ -1,5 +1,4 @@
 import {
-  STORAGE_KEYS,
   getStudents,
   saveStudents,
   getDraft,
@@ -9,535 +8,86 @@ import {
   saveFilters,
   clearFilters,
 } from "./storage.js";
-import { normalizeStudent, validateStudent } from "./validation.js";
-import {
-  renderStudentTable,
-  renderMetrics,
-  renderCareerBreakdown,
-  renderResultsSummary,
-  renderLatestLocation,
-  populateForm,
-  resetForm,
-  clearFormErrors,
-  renderFormErrors,
-  toggleModal,
-  renderModalMeta,
-  renderLocationStatus,
-  showFeedback,
-  renderStorageStatus,
-  renderCareerOptions,
-  formatCareerName,
-  escapeHtml,  // Importada desde ui.js para evitar duplicar la función
-} from "./ui.js";
-import { requestCurrentCoordinates, reverseGeocodeCoordinates } from "./api.js";
+import { showFeedback } from "./ui.js";
+import { DOM, STATE, DEFAULT_FILTERS, getMetricNodes, getModalNodes } from "./app-state.js";
+import { createStudentsMapController } from "./students-map.js";
+import { createLocationMapController } from "./location-map.js";
+import { createConfirmationController } from "./confirmation-modal.js";
+import { createStudentModalController } from "./student-modal.js";
+import { createMetricsController } from "./metrics-controller.js";
+import { createAppView } from "./app-view.js";
+import { createStudentActions } from "./student-actions.js";
 
-const DEFAULT_FILTERS = {
-  search: "",
-  career: "",
-  status: "",
-};
+const studentsMap = createStudentsMapController(DOM);
+const locationMap = createLocationMapController({
+  dom: DOM,
+  persistDraftFromForm,
+  notify,
+});
+const confirmation = createConfirmationController({
+  dom: DOM,
+  notify,
+});
+const studentModal = createStudentModalController({
+  dom: DOM,
+  state: STATE,
+  getModalNodes,
+  getDraft,
+  locationMap,
+  persistDraftFromForm,
+});
+const metrics = createMetricsController({
+  dom: DOM,
+  getMetricNodes,
+  workerUrl: new URL("./workers/student-metrics.worker.js", import.meta.url),
+  notify,
+});
+const view = createAppView({
+  dom: DOM,
+  state: STATE,
+  getDraft,
+  studentsMap,
+  metrics,
+  notify,
+});
+const actions = createStudentActions({
+  dom: DOM,
+  state: STATE,
+  getDraft,
+  saveStudents,
+  clearDraft,
+  clearFilters,
+  defaultFilters: DEFAULT_FILTERS,
+  studentModal,
+  confirmation,
+  view,
+  notify,
+});
 
-/**
- * Mapa de colores y clases CSS por estado del estudiante.
- * Los valores de markerColor son variables CSS definidas en styles.css.
- * Usar un objeto evita repetir cadenas "Activo", "Becado", etc. en varios lugares.
- */
-const STATUS_THEME = {
-  Activo: {
-    markerColor: "--status-active-marker",
-    badgeClass: "status-badge--activo",
-  },
-  Becado: {
-    markerColor: "--status-scholar-marker",
-    badgeClass: "status-badge--becado",
-  },
-  Egresado: {
-    markerColor: "--status-graduate-marker",
-    badgeClass: "status-badge--egresado",
-  },
-  Inactivo: {
-    markerColor: "--status-inactive-marker",
-    badgeClass: "status-badge--inactivo",
-  },
-};
-
-/**
- * Tema de respaldo cuando el estado del estudiante no coincide con ninguno de STATUS_THEME.
- */
-const DEFAULT_STATUS_THEME = {
-  markerColor: "--status-neutral-marker",
-  badgeClass: "status-badge--neutral",
-};
-
-const DOM = {
-  feedbackContainer: document.querySelector("#feedbackContainer"),
-  storageStatus: document.querySelector("#storageStatus"),
-  draftIndicator: document.querySelector("#draftIndicator"),
-  newStudentButton: document.querySelector("#newStudentButton"),
-  demoButton: document.querySelector("#demoButton"),
-  clearAllButton: document.querySelector("#clearAllButton"),
-  resetFiltersButton: document.querySelector("#resetFiltersButton"),
-  searchInput: document.querySelector("#searchInput"),
-  careerFilter: document.querySelector("#careerFilter"),
-  statusFilter: document.querySelector("#statusFilter"),
-  resultsSummary: document.querySelector("#resultsSummary"),
-  studentTableBody: document.querySelector("#studentTableBody"),
-  careerBreakdown: document.querySelector("#careerBreakdown"),
-  latestLocationCard: document.querySelector("#latestLocationCard"),
-  studentModal: document.querySelector("#studentModal"),
-  closeModalButton: document.querySelector("#closeModalButton"),
-  cancelModalButton: document.querySelector("#cancelModalButton"),
-  studentForm: document.querySelector("#studentForm"),
-  modalModeBadge: document.querySelector("#modalModeBadge"),
-  modalTitle: document.querySelector("#modalTitle"),
-  submitButton: document.querySelector("#submitButton"),
-  formStatusText: document.querySelector("#formStatusText"),
-  locationButton: document.querySelector("#locationButton"),
-  locationStatus: document.querySelector("#locationStatus"),
-  metricTotal: document.querySelector("#metricTotal"),
-  metricActive: document.querySelector("#metricActive"),
-  metricInactive: document.querySelector("#metricInactive"),
-  metricAverage: document.querySelector("#metricAverage"),
-  metricAdults: document.querySelector("#metricAdults"),
-  metricLocated: document.querySelector("#metricLocated"),
-  studentsMap: document.querySelector("#studentsMap"),
-  mapStudentCount: document.querySelector("#mapStudentCount"),
-  studentsMapEmpty: document.querySelector("#studentsMapEmpty"),
-  confirmModal: document.querySelector("#confirmModal"),
-  confirmTitle: document.querySelector("#confirmTitle"),
-  confirmMessage: document.querySelector("#confirmMessage"),
-  confirmIcon: document.querySelector("#confirmIcon"),
-  confirmOkButton: document.querySelector("#confirmOkButton"),
-  confirmCancelButton: document.querySelector("#confirmCancelButton"),
-};
-
-const STATE = {
-  students: [],
-  filteredStudents: [],
-  filters: { ...DEFAULT_FILTERS },
-  editingId: null,
-  worker: null,
-  map: null,
-  mapMarker: null,
-  studentsMap: null,
-  studentsMapLayer: null,
-  pendingConfirmation: null,
-};
-
-/**
- * Verifica que un valor pueda usarse como coordenada geografica valida.
- * Rechaza null, undefined, cadenas vacias y valores que no sean numeros finitos.
- * Esto evita el bug de tratar la coordenada 0 (ecuador/meridiano) como "sin ubicacion".
- *
- * @param {any} value - El valor a verificar.
- * @returns {boolean}
- */
-function hasValidCoordinateValue(value) {
-  if (value === null || value === undefined) return false;
-  if (typeof value === "string" && value.trim() === "") return false;
-  return Number.isFinite(Number(value));
-}
-
-/**
- * Extrae las coordenadas de un estudiante como numeros o retorna null si no las tiene.
- * Centraliza la conversion para no repetir la misma logica en varios lugares.
- *
- * @param {object} student - El objeto estudiante del registro.
- * @returns {{ lat: number, lng: number } | null}
- */
-function getStudentCoordinates(student) {
-  if (
-    !hasValidCoordinateValue(student?.latitud) ||
-    !hasValidCoordinateValue(student?.longitud)
-  ) {
-    return null;
-  }
-
-  return {
-    lat: Number(student.latitud),
-    lng: Number(student.longitud),
-  };
-}
-
-/**
- * Indica si un estudiante tiene alguna forma de ubicacion registrada
- * (texto descriptivo o coordenadas GPS).
- *
- * @param {object} student - El objeto estudiante del registro.
- * @returns {boolean}
- */
-function studentHasLocation(student) {
-  return (
-    Boolean(String(student?.ubicacionTexto ?? "").trim()) ||
-    Boolean(getStudentCoordinates(student))
-  );
-}
-
-/**
- * Lee el valor actual de una variable CSS personalizada (--variable) desde el elemento raiz.
- * Necesario para que los marcadores del mapa usen los mismos colores definidos en styles.css.
- * Si la variable no existe, intenta una variable de respaldo o retorna el color heredado.
- *
- * @param {string} variableName - Nombre de la variable, ej: "--status-active-marker".
- * @param {string} [fallbackVariableName] - Variable alternativa si la principal no existe.
- * @returns {string} Valor CSS del color como cadena.
- */
-function getCssVariable(variableName, fallbackVariableName = "") {
-  const styles = getComputedStyle(document.documentElement);
-  const value = resolveCssVariable(styles, variableName);
-
-  if (value) {
-    return value;
-  }
-
-  if (fallbackVariableName) {
-    return resolveCssVariable(styles, fallbackVariableName) || styles.color;
-  }
-
-  return styles.color;
-}
-
-/**
- * Lee el valor de una variable CSS y, si apunta a otra variable con var(...),
- * la resuelve de forma recursiva hasta un maximo de 3 niveles.
- * Esto es necesario porque algunas variables del tema referencian a otras variables.
- * Ejemplo: --status-active-marker -> var(--color-success) -> "#16a34a"
- *
- * @param {CSSStyleDeclaration} styles - Estilos computados del documento.
- * @param {string} variableName - Nombre de la variable CSS a resolver.
- * @returns {string} El valor final de la variable, o cadena vacia si no existe.
- */
-function resolveCssVariable(styles, variableName) {
-  let value = styles.getPropertyValue(variableName).trim();
-
-  // Itera para resolver referencias anidadas del tipo var(--otra-variable)
-  for (let depth = 0; depth < 3 && value.startsWith("var("); depth += 1) {
-    const nestedVariable = value.match(/^var\((--[\w-]+)\)$/)?.[1];
-
-    if (!nestedVariable) {
-      break;
-    }
-
-    value = styles.getPropertyValue(nestedVariable).trim();
-  }
-
-  return value;
-}
-
-/**
- * Retorna el tema visual (color y clase CSS) correspondiente al estado de un estudiante.
- * Si el estado no esta en STATUS_THEME, retorna el tema neutral por defecto.
- *
- * @param {string} status - Estado del estudiante, ej: "Activo", "Becado".
- * @returns {{ markerColor: string, badgeClass: string }}
- */
-function getStatusTheme(status) {
-  return STATUS_THEME[status] ?? DEFAULT_STATUS_THEME;
-}
-
-/**
- * Inicializa el mapa Leaflet dentro del modal la primera vez que se abre.
- */
-function initLocationMap() {
-  const container = document.querySelector("#studentMap");
-  if (!container || !window.L) return;
-
-  if (!STATE.map) {
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    });
-
-    STATE.map = L.map("studentMap").setView([13.7942, -88.8965], 7);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-    }).addTo(STATE.map);
-
-    STATE.map.on("click", async (event) => {
-      const { lat, lng } = event.latlng;
-      setMapMarker(lat, lng);
-      fillFormCoordinates(lat, lng);
-      await geocodeMapPoint(lat, lng);
-    });
-  }
-
-  refreshLocationMapLayout();
-}
-
-/**
- * Fuerza a Leaflet a recalcular el tamaño del mapa del formulario.
- * Esto es necesario porque el mapa se inicializa dentro de un modal oculto:
- * cuando el modal no esta visible, el navegador reporta dimensiones de 0x0,
- * y Leaflet dibuja los tiles incorrectamente. Se llama dos veces:
- * - requestAnimationFrame: en el siguiente frame de renderizado (muy rapido)
- * - setTimeout 150ms: como seguro adicional, por si el modal tarda en animarse
- */
-function refreshLocationMapLayout() {
-  // Espera al siguiente frame para que el modal ya este visible en pantalla
-  window.requestAnimationFrame(() => {
-    STATE.map?.invalidateSize();
-  });
-
-  // Segundo intento despues de 150ms, cubre animaciones lentas del modal
-  window.setTimeout(() => {
-    STATE.map?.invalidateSize();
-  }, 150);
-}
-
-/**
- * Crea un icono personalizado para el marcador de ubicacion del formulario.
- * Se usa un div con CSS en lugar del pin por defecto de Leaflet para que
- * el marcador tenga el color del tema de la aplicacion.
- *
- * @returns {L.DivIcon} Icono Leaflet basado en HTML/CSS.
- */
-function createLocationMarkerIcon() {
-  return L.divIcon({
-    className: "student-location-marker",
-    html: '<span aria-hidden="true"></span>',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  });
-}
-
-/**
- * Coloca o mueve el marcador en el mapa y lo hace arrastrable.
- *
- * @param {number} lat
- * @param {number} lng
- */
-function setMapMarker(lat, lng) {
-  if (STATE.mapMarker) {
-    STATE.mapMarker.setLatLng([lat, lng]);
-    STATE.mapMarker.addTo(STATE.map);
-    refreshLocationMapLayout();
-    return;
-  }
-
-  STATE.mapMarker = L.marker([lat, lng], {
-    draggable: true,
-    icon: createLocationMarkerIcon(),
-  }).addTo(STATE.map);
-
-  refreshLocationMapLayout();
-
-  STATE.mapMarker.on("dragend", async (event) => {
-    const pos = event.target.getLatLng();
-    fillFormCoordinates(pos.lat, pos.lng);
-    await geocodeMapPoint(pos.lat, pos.lng);
-  });
-}
-
-/**
- * Elimina el marcador del mapa si existe.
- */
-function removeMapMarker() {
-  if (STATE.mapMarker) {
-    STATE.mapMarker.remove();
-    STATE.mapMarker = null;
-  }
-}
-
-/**
- * Escribe las coordenadas en los inputs ocultos del formulario.
- *
- * @param {number} lat
- * @param {number} lng
- */
-function fillFormCoordinates(lat, lng) {
-  DOM.studentForm.elements.namedItem("latitud").value = lat.toFixed(6);
-  DOM.studentForm.elements.namedItem("longitud").value = lng.toFixed(6);
-}
-
-/**
- * Llama al API de geocodificación inversa y rellena la descripción de ubicación.
- *
- * @param {number} lat
- * @param {number} lng
- */
-async function geocodeMapPoint(lat, lng) {
-  renderLocationStatus(DOM.locationStatus, "Obteniendo nombre del lugar...");
-  try {
-    const result = await reverseGeocodeCoordinates(lat, lng);
-    DOM.studentForm.elements.namedItem("ubicacionTexto").value = result.label;
-    renderLocationStatus(DOM.locationStatus, "Ubicación seleccionada correctamente.");
-    persistDraftFromForm();
-  } catch {
-    renderLocationStatus(DOM.locationStatus, "No se pudo obtener el nombre. Puedes escribirlo manualmente.");
-  }
-}
-
-/**
- * Inicializa el mapa global del dashboard con tiles de OpenStreetMap.
- */
-function initStudentsMap() {
-  const container = DOM.studentsMap;
-  if (!container || !window.L || STATE.studentsMap) return;
-
-  STATE.studentsMap = L.map("studentsMap").setView([13.7942, -88.8965], 7);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(STATE.studentsMap);
-
-  STATE.studentsMapLayer = L.layerGroup().addTo(STATE.studentsMap);
-}
-
-/**
- * Actualiza los marcadores del mapa de overview con los estudiantes actuales.
- *
- * @param {Array<object>} students
- */
-function updateStudentsMap(students) {
-  if (!STATE.studentsMap || !STATE.studentsMapLayer) return;
-
-  STATE.studentsMapLayer.clearLayers();
-
-  const located = students.reduce((accumulator, student) => {
-    const coordinates = getStudentCoordinates(student);
-    if (coordinates) {
-      accumulator.push({ student, coordinates });
-    }
-    return accumulator;
-  }, []);
-
-  if (DOM.studentsMapEmpty) {
-    DOM.studentsMapEmpty.hidden = located.length > 0;
-  }
-
-  located.forEach(({ student, coordinates }) => {
-    const statusTheme = getStatusTheme(student.estado);
-    const color = getCssVariable(
-      statusTheme.markerColor,
-      DEFAULT_STATUS_THEME.markerColor
-    );
-    const marker = L.circleMarker([coordinates.lat, coordinates.lng], {
-      radius: 9,
-      fillColor: color,
-      color: getCssVariable("--leaflet-marker-ring", "--color-surface"),
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.88,
-    });
-
-    marker.bindPopup(`
-      <strong>${escapeHtml(student.nombres)} ${escapeHtml(student.apellidos)}</strong><br/>
-      <span class="map-popup-muted">${escapeHtml(student.carnet)}</span><br/>
-      <span class="map-popup-muted">${escapeHtml(formatCareerName(student.carrera))}</span><br/>
-      <span class="status-badge ${statusTheme.badgeClass}">
-        ${escapeHtml(student.estado)}
-      </span>
-    `);
-
-    STATE.studentsMapLayer.addLayer(marker);
-  });
-
-  if (DOM.mapStudentCount) {
-    DOM.mapStudentCount.textContent =
-      located.length === 1 ? "1 marcador" : `${located.length} marcadores`;
-  }
-
-  if (located.length > 1) {
-    const bounds = L.featureGroup(
-      located.map(({ coordinates }) => L.circleMarker([coordinates.lat, coordinates.lng]))
-    ).getBounds();
-    STATE.studentsMap.fitBounds(bounds, { padding: [40, 40] });
-  } else if (located.length === 1) {
-    STATE.studentsMap.setView(
-      [located[0].coordinates.lat, located[0].coordinates.lng],
-      13
-    );
-  } else {
-    STATE.studentsMap.setView([13.7942, -88.8965], 7);
-  }
-}
-
-/**
- * Punto de entrada principal de la aplicación.
- */
 function init() {
   STATE.students = getStudents();
   STATE.filters = { ...DEFAULT_FILTERS, ...getFilters() };
 
-  hydrateFilterInputs();
+  view.hydrateFilterInputs();
   bindEvents();
-  setupWorker();
-  initStudentsMap();
-  renderApplication();
+  confirmation.bindEvents();
+  studentModal.bindEvents({ onSubmit: actions.saveStudentFromForm });
+  metrics.setup();
+  studentsMap.init();
+  view.renderApplication();
 }
 
-/**
- * Registra todos los listeners del DOM.
- * El operador ?. (optional chaining) protege contra el caso en que un elemento
- * no exista en el HTML: en lugar de lanzar un error, simplemente no hace nada.
- * Es equivalente a escribir: if (DOM.newStudentButton) { DOM.newStudentButton.addEventListener(...) }
- */
 function bindEvents() {
-  DOM.newStudentButton?.addEventListener("click", () => {
-    openCreateModal();
-  });
-
-  DOM.demoButton?.addEventListener("click", () => {
-    loadDemoStudents();
-  });
-
-  DOM.clearAllButton?.addEventListener("click", () => {
-    clearAllStudents();
-  });
-
-  DOM.resetFiltersButton?.addEventListener("click", () => {
-    STATE.filters = { ...DEFAULT_FILTERS };
-    persistFilters();
-    hydrateFilterInputs();
-    renderApplication();
-    notify("success", "Filtros reiniciados", "Se limpió la vista filtrada.");
-  });
-
-  DOM.searchInput?.addEventListener("input", (event) => {
-    STATE.filters.search = event.target.value;
-    persistFilters();
-    renderApplication();
-  });
-
-  DOM.careerFilter?.addEventListener("change", (event) => {
-    STATE.filters.career = event.target.value;
-    persistFilters();
-    renderApplication();
-  });
-
-  DOM.statusFilter?.addEventListener("change", (event) => {
-    STATE.filters.status = event.target.value;
-    persistFilters();
-    renderApplication();
-  });
-
-  DOM.studentTableBody?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-action]");
-
-    if (!button) {
-      return;
-    }
-
-    const { action, id } = button.dataset;
-
-    if (action === "edit") {
-      openEditModal(id);
-    }
-
-    if (action === "delete") {
-      deleteStudent(id);
-    }
-  });
-
-  DOM.closeModalButton?.addEventListener("click", closeModal);
-  DOM.cancelModalButton?.addEventListener("click", closeModal);
-
-  DOM.studentModal?.addEventListener("click", (event) => {
-    if (event.target === DOM.studentModal) {
-      closeModal();
-    }
+  DOM.newStudentButton?.addEventListener("click", () => studentModal.openCreate());
+  DOM.demoButton?.addEventListener("click", () => actions.loadDemoStudents());
+  DOM.clearAllButton?.addEventListener("click", () => actions.clearAllStudents());
+  DOM.resetFiltersButton?.addEventListener("click", resetFiltersView);
+  DOM.searchInput?.addEventListener("input", (event) => updateFilter("search", event.target.value));
+  DOM.careerFilter?.addEventListener("change", (event) => updateFilter("career", event.target.value));
+  DOM.statusFilter?.addEventListener("change", (event) => updateFilter("status", event.target.value));
+  DOM.studentTableBody?.addEventListener("click", handleTableAction);
+  DOM.locationButton?.addEventListener("click", async () => {
+    await locationMap.resolveCurrentLocation();
   });
 
   document.addEventListener("keydown", (event) => {
@@ -545,200 +95,33 @@ function bindEvents() {
       return;
     }
 
-    if (DOM.confirmModal && !DOM.confirmModal.hidden) {
-      settleConfirmation(false);
+    if (confirmation.handleEscape()) {
       return;
     }
 
-    if (DOM.studentModal && !DOM.studentModal.hidden) {
-      closeModal();
-    }
-  });
-
-  DOM.studentForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    saveStudentFromForm();
-  });
-
-  DOM.studentForm?.addEventListener("input", () => {
-    clearFormErrors(DOM.studentForm);
-    persistDraftFromForm();
-  });
-
-  DOM.studentForm?.addEventListener("change", () => {
-    persistDraftFromForm();
-  });
-
-  DOM.locationButton?.addEventListener("click", async () => {
-    await resolveLocationForForm();
-  });
-
-  DOM.confirmOkButton?.addEventListener("click", () => {
-    settleConfirmation(true);
-  });
-
-  DOM.confirmCancelButton?.addEventListener("click", () => {
-    settleConfirmation(false);
-  });
-
-  DOM.confirmModal?.addEventListener("click", (event) => {
-    if (event.target === DOM.confirmModal) {
-      settleConfirmation(false);
-    }
+    studentModal.handleEscape();
   });
 }
 
-/**
- * Configura el worker que calcula métricas del dashboard.
- */
-function setupWorker() {
-  try {
-    // import.meta.url es la URL del modulo actual (app.js).
-    // new URL(..., import.meta.url) construye la ruta absoluta al worker
-    // correctamente sin importar desde que servidor se sirva la app.
-    STATE.worker = new Worker(new URL("./workers/student-metrics.worker.js", import.meta.url));
-    STATE.worker.onmessage = (event) => {
-      renderMetrics(
-        {
-          total: DOM.metricTotal,
-          active: DOM.metricActive,
-          inactive: DOM.metricInactive,
-          average: DOM.metricAverage,
-          adults: DOM.metricAdults,
-          located: DOM.metricLocated,
-        },
-        event.data
-      );
-      renderCareerBreakdown(DOM.careerBreakdown, event.data.porCarrera ?? {});
-    };
-  } catch (error) {
-    console.error("No fue posible iniciar el Web Worker.", error);
-    STATE.worker = null;
-    notify(
-      "warning",
-      "Worker no disponible",
-      "Las métricas se calcularán en el hilo principal como respaldo."
-    );
+function handleTableAction(event) {
+  const button = event.target.closest("[data-action]");
+
+  if (!button) {
+    return;
+  }
+
+  const { action, id } = button.dataset;
+
+  if (action === "edit") {
+    openStudentForEdit(id);
+  }
+
+  if (action === "delete") {
+    actions.deleteStudent(id);
   }
 }
 
-/**
- * Renderiza todos los bloques reactivos de la aplicación.
- */
-function renderApplication() {
-  try {
-    STATE.filteredStudents = applyFilters(STATE.students, STATE.filters);
-
-    renderCareerOptions(
-      DOM.careerFilter,
-      STATE.students.map((student) => student.carrera),
-      STATE.filters.career
-    );
-    renderStudentTable(DOM.studentTableBody, STATE.filteredStudents);
-    renderResultsSummary(
-      DOM.resultsSummary,
-      STATE.filteredStudents.length,
-      STATE.students.length
-    );
-    updateStudentsMap(STATE.students);
-    renderStorageMeta();
-    renderLatestLocation(
-      DOM.latestLocationCard,
-      findLatestLocatedStudent(STATE.students)
-    );
-    updateMetrics(STATE.filteredStudents);
-  } catch (error) {
-    console.error("Error al renderizar la aplicación.", error);
-    notify(
-      "error",
-      "Error de interfaz",
-      "No fue posible actualizar la vista. Revisa la consola del navegador."
-    );
-  }
-}
-
-/**
- * Aplica busqueda y filtros de carrera o estado sobre los estudiantes.
- *
- * @param {Array<object>} students
- * @param {{ search: string, career: string, status: string }} filters
- * @returns {Array<object>}
- */
-function applyFilters(students, filters) {
-  const searchTerm = String(filters.search ?? "").trim().toLowerCase();
-
-  return students.filter((student) => {
-    const matchesSearch =
-      !searchTerm ||
-      [
-        student.carnet,
-        student.nombres,
-        student.apellidos,
-        `${student.nombres} ${student.apellidos}`,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(searchTerm);
-
-    const matchesCareer =
-      !filters.career || String(student.carrera) === String(filters.career);
-    const matchesStatus =
-      !filters.status || String(student.estado) === String(filters.status);
-
-    return matchesSearch && matchesCareer && matchesStatus;
-  });
-}
-
-/**
- * Carga los filtros guardados de sessionStorage en los controles visibles.
- */
-function hydrateFilterInputs() {
-  DOM.searchInput.value = STATE.filters.search;
-  DOM.careerFilter.value = STATE.filters.career;
-  DOM.statusFilter.value = STATE.filters.status;
-}
-
-/**
- * Abre el modal en modo creación, usando borrador si existe.
- */
-function openCreateModal() {
-  STATE.editingId = null;
-  resetForm(DOM.studentForm);
-  renderModalMeta(getModalNodes(), false);
-  renderLocationStatus(
-    DOM.locationStatus,
-    "La ubicación es opcional y no bloquea el guardado."
-  );
-
-  const draft = getDraft();
-
-  if (draft.mode === "create" && draft.values) {
-    populateForm(DOM.studentForm, draft.values);
-    DOM.formStatusText.textContent =
-      "Se recuperó el borrador guardado en la sesión actual.";
-  } else {
-    DOM.formStatusText.textContent =
-      "El formulario guarda borrador en sessionStorage.";
-  }
-
-  removeMapMarker();
-  toggleModal(DOM.studentModal, true);
-  // setTimeout con 0ms difiere la inicializacion del mapa al siguiente ciclo del navegador.
-  // Es necesario porque Leaflet necesita que el contenedor del mapa ya sea visible
-  // (width y height mayores a 0) para inicializarse correctamente.
-  window.setTimeout(() => {
-    initLocationMap();
-    STATE.map?.setView([13.7942, -88.8965], 7);
-  }, 0);
-  DOM.studentForm.elements.namedItem("carnet")?.focus();
-}
-
-/**
- * Abre el modal en modo edición.
- *
- * @param {string} studentId
- */
-function openEditModal(studentId) {
+function openStudentForEdit(studentId) {
   const student = STATE.students.find((candidate) => candidate.id === studentId);
 
   if (!student) {
@@ -746,660 +129,41 @@ function openEditModal(studentId) {
     return;
   }
 
-  STATE.editingId = studentId;
-  resetForm(DOM.studentForm);
-  renderModalMeta(getModalNodes(), true);
-
-  const draft = getDraft();
-  if (draft.mode === "edit" && draft.studentId === studentId && draft.values) {
-    populateForm(DOM.studentForm, draft.values);
-    DOM.formStatusText.textContent =
-      "Se recuperó un borrador de edición pendiente de la sesión.";
-  } else {
-    populateForm(DOM.studentForm, student);
-    DOM.formStatusText.textContent =
-      "Edita los datos y guarda los cambios para actualizar el registro.";
-  }
-
-  renderLocationStatus(
-    DOM.locationStatus,
-    student.ubicacionTexto
-      ? "Puedes recapturar la ubicación si deseas actualizarla."
-      : "Este estudiante aún no tiene una ubicación capturada."
-  );
-
-  toggleModal(DOM.studentModal, true);
-  // setTimeout con 0ms: igual que en openCreateModal, espera a que el modal
-  // sea visible antes de inicializar y posicionar el mapa.
-  window.setTimeout(() => {
-    initLocationMap();
-    const coordinates = getStudentCoordinates(student);
-    if (coordinates) {
-      setMapMarker(coordinates.lat, coordinates.lng);
-      STATE.map.setView([coordinates.lat, coordinates.lng], 13);
-    } else {
-      removeMapMarker();
-      STATE.map?.setView([13.7942, -88.8965], 7);
-    }
-  }, 0);
-  DOM.studentForm.elements.namedItem("carnet")?.focus();
+  studentModal.openEdit(student);
 }
 
-/**
- * Cierra el modal y limpia solo el estado visual temporal.
- */
-function closeModal() {
-  toggleModal(DOM.studentModal, false);
-  clearFormErrors(DOM.studentForm);
+function updateFilter(fieldName, value) {
+  STATE.filters[fieldName] = value;
+  persistFilters();
+  view.renderApplication();
 }
 
-/**
- * Muestra el modal de confirmacion y retorna una Promise que se resuelve
- * cuando el usuario hace clic en "Confirmar" (true) o "Cancelar" (false).
- *
- * Como funciona el patron:
- * 1. Se crea una Promise y se guarda su funcion "resolve" en STATE.pendingConfirmation.
- * 2. El modal queda visible esperando la decision del usuario.
- * 3. Cuando el usuario hace clic, settleConfirmation() llama a resolve(true/false).
- * 4. La Promise se resuelve y el codigo que uso "await requestConfirmation()" continua.
- *
- * Este patron permite escribir codigo asincrono de forma lineal con async/await,
- * en lugar de usar callbacks anidados o eventos manuales.
- *
- * @param {{ title: string, message: string, confirmText?: string, cancelText?: string, tone?: string }} config
- * @returns {Promise<boolean>} true si el usuario confirmo, false si cancelo.
- */
-function requestConfirmation({
-  title,
-  message,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
-  tone = "danger",
-}) {
-  if (!DOM.confirmModal) {
-    notify(
-      "error",
-      "Confirmación no disponible",
-      "No se encontró el modal de confirmación en la página."
-    );
-    return Promise.resolve(false);
-  }
-
-  if (STATE.pendingConfirmation) {
-    settleConfirmation(false);
-  }
-
-  const activeElement =
-    document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-  DOM.confirmTitle.textContent = title;
-  DOM.confirmMessage.textContent = message;
-  DOM.confirmOkButton.textContent = confirmText;
-  DOM.confirmCancelButton.textContent = cancelText;
-  DOM.confirmOkButton.className = `btn ${
-    tone === "danger" ? "app-danger-button" : "app-primary-button"
-  }`;
-  DOM.confirmIcon.dataset.tone = tone;
-  DOM.confirmIcon.innerHTML =
-    tone === "danger"
-      ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-      : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>';
-
-  toggleModal(DOM.confirmModal, true);
-  // setTimeout 0ms: mueve el foco al boton Cancelar despues de que el modal
-  // sea visible, para que la navegacion por teclado funcione correctamente.
-  window.setTimeout(() => DOM.confirmCancelButton.focus(), 0);
-
-  // Se guarda "resolve" en el estado para poder llamarla desde settleConfirmation
-  // cuando el usuario haga clic, sin perder la referencia a esta Promise.
-  return new Promise((resolve) => {
-    STATE.pendingConfirmation = {
-      resolve,
-      activeElement,
-    };
-  });
+function resetFiltersView() {
+  STATE.filters = { ...DEFAULT_FILTERS };
+  persistFilters();
+  view.hydrateFilterInputs();
+  view.renderApplication();
+  notify("success", "Filtros reiniciados", "Se limpio la vista filtrada.");
 }
 
-/**
- * Resuelve la confirmacion pendiente con el resultado del usuario.
- * Cierra el modal, devuelve el foco al elemento que lo abrio y llama a resolve().
- *
- * @param {boolean} confirmed - true si el usuario confirmo, false si cancelo.
- */
-function settleConfirmation(confirmed) {
-  if (!STATE.pendingConfirmation) {
-    return;
-  }
-
-  const { resolve, activeElement } = STATE.pendingConfirmation;
-  STATE.pendingConfirmation = null;
-  toggleModal(DOM.confirmModal, false);
-  resolve(confirmed);
-  activeElement?.focus?.();
-}
-
-/**
- * Guarda un estudiante nuevo o actualiza el actual.
- */
-function saveStudentFromForm() {
-  try {
-    const rawStudent = readStudentForm();
-    const normalizedStudent = normalizeStudent(rawStudent);
-    const validation = validateStudent(
-      normalizedStudent,
-      STATE.students,
-      STATE.editingId
-    );
-
-    if (!validation.isValid) {
-      clearFormErrors(DOM.studentForm);
-      renderFormErrors(DOM.studentForm, validation.errors);
-      notify(
-        "warning",
-        "Formulario incompleto",
-        "Corrige los campos marcados antes de guardar."
-      );
-      return;
-    }
-
-    const existingStudent = STATE.students.find(
-      (candidate) => candidate.id === STATE.editingId
-    );
-
-    const studentToSave = {
-      ...(existingStudent ?? {}),
-      ...normalizedStudent,
-      id: existingStudent?.id ?? createStudentId(),
-      fechaRegistro: existingStudent?.fechaRegistro ?? new Date().toISOString(),
-    };
-
-    const nextStudents = existingStudent
-      ? STATE.students.map((student) =>
-          student.id === existingStudent.id ? studentToSave : student
-        )
-      : [studentToSave, ...STATE.students];
-
-    if (!saveStudents(nextStudents)) {
-      throw new Error("No se pudo guardar la información en localStorage.");
-    }
-
-    STATE.students = sortStudents(nextStudents);
-    clearDraft();
-    STATE.editingId = null;
-    resetForm(DOM.studentForm);
-    closeModal();
-    renderApplication();
-
-    notify(
-      "success",
-      existingStudent ? "Registro actualizado" : "Registro creado",
-      existingStudent
-        ? "El estudiante fue actualizado correctamente."
-        : "El estudiante fue agregado correctamente."
-    );
-  } catch (error) {
-    console.error("Error al guardar el estudiante.", error);
-    notify(
-      "error",
-      "No fue posible guardar",
-      "Ocurrió un problema al intentar persistir el estudiante."
-    );
-  }
-}
-
-/**
- * Elimina un estudiante previa confirmación.
- *
- * @param {string} studentId
- */
-async function deleteStudent(studentId) {
-  const student = STATE.students.find((candidate) => candidate.id === studentId);
-
-  if (!student) {
-    notify("error", "Registro no encontrado", "No fue posible eliminar el estudiante.");
-    return;
-  }
-
-  const confirmed = await requestConfirmation({
-    title: "Eliminar estudiante",
-    message: `Se eliminará a ${student.nombres} ${student.apellidos}. Esta acción no se puede deshacer.`,
-    confirmText: "Eliminar",
-    tone: "danger",
-  });
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    const nextStudents = STATE.students.filter((candidate) => candidate.id !== studentId);
-
-    if (!saveStudents(nextStudents)) {
-      throw new Error("No se pudo actualizar localStorage después de eliminar.");
-    }
-
-    STATE.students = nextStudents;
-
-    const draft = getDraft();
-    if (draft.studentId === studentId) {
-      clearDraft();
-    }
-
-    renderApplication();
-    notify("success", "Registro eliminado", "El estudiante fue retirado del listado.");
-  } catch (error) {
-    console.error("Error al eliminar el estudiante.", error);
-    notify(
-      "error",
-      "No fue posible eliminar",
-      "Ocurrió un problema al intentar borrar el estudiante."
-    );
-  }
-}
-
-/**
- * Carga datos de ejemplo utiles para una demo rapida del proyecto.
- */
-async function loadDemoStudents() {
-  const shouldAppend = await requestConfirmation({
-    title: STATE.students.length
-      ? "Agregar datos de ejemplo"
-      : "Cargar datos de ejemplo",
-    message: STATE.students.length
-      ? "Ya hay registros guardados. Se agregarán datos de ejemplo sin borrar lo actual."
-      : "Se cargarán estudiantes de ejemplo para la demostración.",
-    confirmText: STATE.students.length ? "Agregar demo" : "Cargar demo",
-    tone: "warning",
-  });
-
-  if (!shouldAppend) {
-    return;
-  }
-
-  const demoCatalog = [
-    {
-      id: createStudentId(),
-      carnet: "UES-2026-001",
-      nombres: "Daniela",
-      apellidos: "Rivas",
-      edad: 21,
-      telefono: "7001-2003",
-      direccion: "Colonia El Triunfo, Santa Ana",
-      encargado: "María Rivas",
-      correoInstitucional: "daniela.rivas@ues.edu.sv",
-      carrera: "Ingenieria en Desarrollo de Software",
-      ciclo: "06",
-      promedio: 8.74,
-      estado: "Activo",
-      fechaRegistro: new Date(Date.now() - 86_400_000).toISOString(), // hace 24 horas (24 * 60 * 60 * 1000 ms)
-      latitud: 13.99417,
-      longitud: -89.55972,
-      ubicacionTexto: "Santa Ana, Santa Ana, El Salvador",
-    },
-    {
-      id: createStudentId(),
-      carnet: "UES-2026-002",
-      nombres: "Luis",
-      apellidos: "Méndez",
-      edad: 18,
-      telefono: "7110-4412",
-      direccion: "Barrio San Sebastián, Sonsonate",
-      encargado: "Carlos Méndez",
-      correoInstitucional: "luis.mendez@ues.edu.sv",
-      carrera: "Arquitectura",
-      ciclo: "03",
-      promedio: 7.92,
-      estado: "Becado",
-      fechaRegistro: new Date(Date.now() - 43_200_000).toISOString(), // hace 12 horas (12 * 60 * 60 * 1000 ms)
-      latitud: null,
-      longitud: null,
-      ubicacionTexto: "Sonsonate, El Salvador",
-    },
-    {
-      id: createStudentId(),
-      carnet: "UES-2026-003",
-      nombres: "Andrea",
-      apellidos: "González",
-      edad: 24,
-      telefono: "7288-0041",
-      direccion: "Residencial Nueva Esperanza, Ahuachapán",
-      encargado: "Rosa González",
-      correoInstitucional: "andrea.gonzalez@ues.edu.sv",
-      carrera: "Administracion de Empresas",
-      ciclo: "08",
-      promedio: 9.12,
-      estado: "Egresado",
-      fechaRegistro: new Date().toISOString(),
-      latitud: 13.92139,
-      longitud: -89.845,
-      ubicacionTexto: "Ahuachapán, El Salvador",
-    },
-  ];
-
-  const mergedByCarnet = new Map(
-    STATE.students.map((student) => [String(student.carnet).toUpperCase(), student])
-  );
-
-  demoCatalog.forEach((student) => {
-    mergedByCarnet.set(String(student.carnet).toUpperCase(), student);
-  });
-
-  const demoStudents = sortStudents([...mergedByCarnet.values()]);
-
-  if (!saveStudents(demoStudents)) {
-    notify(
-      "error",
-      "No fue posible cargar la demo",
-      "No se pudo persistir la información de ejemplo."
-    );
-    return;
-  }
-
-  STATE.students = demoStudents;
-  renderApplication();
-  notify(
-    "success",
-    "Datos de ejemplo listos",
-    "La tabla fue poblada con estudiantes para tu presentación."
-  );
-}
-
-/**
- * Elimina todos los estudiantes y reinicia la interfaz.
- */
-async function clearAllStudents() {
-  const confirmed = await requestConfirmation({
-    title: "Limpiar registros",
-    message: "Se eliminarán todos los registros del localStorage. Esta acción no se puede deshacer.",
-    confirmText: "Limpiar registros",
-    tone: "danger",
-  });
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    if (!saveStudents([])) {
-      throw new Error("No se pudo vaciar localStorage.");
-    }
-
-    STATE.students = [];
-    STATE.filteredStudents = [];
-    clearDraft();
-    clearFilters();
-    STATE.filters = { ...DEFAULT_FILTERS };
-    hydrateFilterInputs();
-    renderApplication();
-
-    notify(
-      "success",
-      "Registros eliminados",
-      "La aplicación volvió al estado inicial."
-    );
-  } catch (error) {
-    console.error("Error al limpiar los registros.", error);
-    notify(
-      "error",
-      "No fue posible limpiar",
-      "Ocurrió un problema al reiniciar los datos guardados."
-    );
-  }
-}
-
-/**
- * Captura geolocalización, llama a fetch y actualiza el formulario.
- */
-async function resolveLocationForForm() {
-  const idleButtonContent = DOM.locationButton.innerHTML;
-  DOM.locationButton.disabled = true;
-  DOM.locationButton.setAttribute("aria-busy", "true");
-  DOM.locationButton.innerHTML =
-    '<span class="button-spinner" aria-hidden="true"></span> Buscando GPS...';
-  renderLocationStatus(
-    DOM.locationStatus,
-    "Solicitando permisos y consultando la ubicación actual..."
-  );
-
-  try {
-    const coordinates = await requestCurrentCoordinates();
-
-    fillFormCoordinates(coordinates.latitude, coordinates.longitude);
-    setMapMarker(coordinates.latitude, coordinates.longitude);
-    STATE.map?.setView([coordinates.latitude, coordinates.longitude], 14);
-
-    renderLocationStatus(
-      DOM.locationStatus,
-      "Posición obtenida. Traduciendo coordenadas con fetch..."
-    );
-
-    const geocodeResult = await reverseGeocodeCoordinates(
-      coordinates.latitude,
-      coordinates.longitude
-    );
-
-    DOM.studentForm.elements.namedItem("ubicacionTexto").value = geocodeResult.label;
-    renderLocationStatus(
-      DOM.locationStatus,
-      "Ubicación capturada correctamente desde la API JSON."
-    );
-    persistDraftFromForm();
-  } catch (error) {
-    console.error("Error al resolver la ubicación.", error);
-    renderLocationStatus(
-      DOM.locationStatus,
-      `${error.message} Puedes escribir la ubicación manualmente.`
-    );
-    notify(
-      "warning",
-      "Ubicación parcial",
-      "No se pudo completar la geolocalización, pero el formulario sigue disponible."
-    );
-  } finally {
-    DOM.locationButton.disabled = false;
-    DOM.locationButton.removeAttribute("aria-busy");
-    DOM.locationButton.innerHTML = idleButtonContent;
-  }
-}
-
-/**
- * Guarda el borrador actual del formulario en sessionStorage.
- */
 function persistDraftFromForm() {
   if (DOM.studentModal.hidden) {
     return;
   }
 
-  const values = readStudentForm();
   saveDraft({
     mode: STATE.editingId ? "edit" : "create",
     studentId: STATE.editingId,
-    values,
+    values: studentModal.readForm(),
   });
-  renderStorageMeta();
+  view.renderStorageMeta();
 }
 
-/**
- * Persiste el estado actual de filtros en sessionStorage.
- */
 function persistFilters() {
   saveFilters(STATE.filters);
-  renderStorageMeta();
+  view.renderStorageMeta();
 }
 
-/**
- * Calcula métricas con Web Worker o usando respaldo local si falla.
- *
- * @param {Array<object>} students
- */
-function updateMetrics(students) {
-  if (STATE.worker) {
-    try {
-      STATE.worker.postMessage(students);
-      return;
-    } catch (error) {
-      console.error("Error al enviar datos al worker.", error);
-    }
-  }
-
-  const fallbackMetrics = computeMetricsFallback(students);
-  renderMetrics(
-    {
-      total: DOM.metricTotal,
-      active: DOM.metricActive,
-      inactive: DOM.metricInactive,
-      average: DOM.metricAverage,
-      adults: DOM.metricAdults,
-      located: DOM.metricLocated,
-    },
-    fallbackMetrics
-  );
-  renderCareerBreakdown(DOM.careerBreakdown, fallbackMetrics.porCarrera);
-}
-
-/**
- * Lee y normaliza los valores visibles del formulario.
- *
- * @returns {Record<string, any>}
- */
-function readStudentForm() {
-  const formData = new FormData(DOM.studentForm);
-
-  return {
-    carnet: formData.get("carnet"),
-    correoInstitucional: formData.get("correoInstitucional"),
-    nombres: formData.get("nombres"),
-    apellidos: formData.get("apellidos"),
-    edad: formData.get("edad"),
-    telefono: formData.get("telefono"),
-    encargado: formData.get("encargado"),
-    direccion: formData.get("direccion"),
-    carrera: formData.get("carrera"),
-    ciclo: formData.get("ciclo"),
-    promedio: formData.get("promedio"),
-    estado: formData.get("estado"),
-    ubicacionTexto: formData.get("ubicacionTexto"),
-    latitud: formData.get("latitud"),
-    longitud: formData.get("longitud"),
-  };
-}
-
-/**
- * Regresa referencias utiles para los textos dinamicos del modal.
- *
- * @returns {{ modeBadge: HTMLElement, title: HTMLElement, submitButton: HTMLElement }}
- */
-function getModalNodes() {
-  return {
-    modeBadge: DOM.modalModeBadge,
-    title: DOM.modalTitle,
-    submitButton: DOM.submitButton,
-  };
-}
-
-/**
- * Actualiza el resumen del almacenamiento en el encabezado.
- */
-function renderStorageMeta() {
-  const filtersActive = Object.values(STATE.filters).filter(Boolean).length;
-  const hasDraft = Boolean(getDraft().values);
-
-  renderStorageStatus(DOM.storageStatus, {
-    totalStudents: STATE.students.length,
-    filtersActive,
-    hasDraft,
-  });
-  DOM.draftIndicator.classList.toggle("d-none", !hasDraft);
-}
-
-/**
- * Busca el último estudiante que tenga ubicación registrada.
- *
- * @param {Array<object>} students
- * @returns {object|null}
- */
-function findLatestLocatedStudent(students) {
-  return (
-    [...students]
-      .sort((left, right) => {
-        return new Date(right.fechaRegistro).getTime() - new Date(left.fechaRegistro).getTime();
-      })
-      .find(studentHasLocation) ?? null
-  );
-}
-
-/**
- * Calcula métricas localmente como respaldo del worker.
- *
- * @param {Array<object>} students
- * @returns {Record<string, any>}
- */
-function computeMetricsFallback(students) {
-  const summary = {
-    total: students.length,
-    porEstado: {},
-    porCarrera: {},
-    promedioGeneral: 0,
-    mayoresEdad: 0,
-    menoresEdad: 0,
-    conUbicacion: 0,
-  };
-
-  students.forEach((student) => {
-    summary.porEstado[student.estado] = (summary.porEstado[student.estado] ?? 0) + 1;
-    summary.porCarrera[student.carrera] = (summary.porCarrera[student.carrera] ?? 0) + 1;
-
-    if (Number(student.edad) >= 18) {
-      summary.mayoresEdad += 1;
-    } else {
-      summary.menoresEdad += 1;
-    }
-
-    if (studentHasLocation(student)) {
-      summary.conUbicacion += 1;
-    }
-  });
-
-  const totalScores = students.reduce((accumulator, student) => {
-    return accumulator + Number(student.promedio ?? 0);
-  }, 0);
-
-  summary.promedioGeneral = students.length ? totalScores / students.length : 0;
-  return summary;
-}
-
-/**
- * Regresa un identificador seguro para nuevos estudiantes.
- *
- * @returns {string}
- */
-function createStudentId() {
-  if (window.crypto?.randomUUID) {
-    return window.crypto.randomUUID();
-  }
-
-  return `student-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-/**
- * Ordena los estudiantes por fecha de registro descendente.
- *
- * @param {Array<object>} students
- * @returns {Array<object>}
- */
-function sortStudents(students) {
-  return [...students].sort((left, right) => {
-    return new Date(right.fechaRegistro).getTime() - new Date(left.fechaRegistro).getTime();
-  });
-}
-
-/**
- * Atajo para mostrar mensajes consistentes.
- *
- * @param {"success"|"warning"|"error"} tone
- * @param {string} title
- * @param {string} message
- */
 function notify(tone, title, message) {
   showFeedback(DOM.feedbackContainer, {
     tone,
