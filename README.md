@@ -34,8 +34,24 @@ Completa esta seccion antes de entregar:
 |   `-- styles.css
 |-- js/
 |   |-- api.js
+|   |-- app-state.js
+|   |-- app-view.js
 |   |-- app.js
+|   |-- confirmation-modal.js
+|   |-- demo-data.js
+|   |-- location-map.js
+|   |-- metrics-controller.js
 |   |-- storage.js
+|   |-- student-actions.js
+|   |-- student-bulk-actions.js
+|   |-- student-crud-actions.js
+|   |-- student-modal.js
+|   |-- student-utils.js
+|   |-- students-map.js
+|   |-- ui-dashboard.js
+|   |-- ui-feedback.js
+|   |-- ui-form.js
+|   |-- ui-table.js
 |   |-- ui.js
 |   |-- validation.js
 |   `-- workers/
@@ -99,18 +115,39 @@ Completa esta seccion antes de entregar:
 
 ## Como ejecutar localmente
 
-Como es una app estatica, puedes abrir `index.html` directamente. Si quieres probar geolocalizacion completa, ejecuta un servidor local para trabajar en `localhost`.
+Este proyecto no necesita instalar dependencias ni ejecutar comandos de `npm`. Es una aplicacion estatica hecha con `HTML`, `CSS` y `JavaScript`.
 
-Ejemplo con Python:
+### Requisitos
+
+- Tener `Git` instalado para clonar el repositorio.
+- Tener un navegador actualizado, por ejemplo Chrome, Edge o Firefox.
+- Tener conexion a internet.
+
+La conexion a internet es necesaria porque el proyecto carga recursos externos por CDN, como Bootstrap, la fuente Manrope, el mapa y el servicio de ubicacion. Si no hay internet, algunas partes visuales o de geolocalizacion pueden fallar o mostrarse incompletas.
+
+### Descargar el proyecto
 
 ```bash
-python -m http.server 5500
+git clone https://github.com/ga22038/App_Estudiantes.git
+cd App_Estudiantes
 ```
 
-Luego abre:
+### Opcion recomendada: Visual Studio Code con Live Server
+
+1. Abre la carpeta `App_Estudiantes` en Visual Studio Code.
+2. Instala la extension `Live Server`.
+3. Da clic derecho sobre `index.html`.
+4. Selecciona `Open with Live Server`.
+5. Se abrira el proyecto en el navegador.
+
+### Opcion rapida: abrir el archivo directamente
+
+Tambien puedes abrir `index.html` directamente en el navegador. Esta opcion sirve para revisar la interfaz, pero para probar mejor la geolocalizacion se recomienda usar Live Server o la version publicada en Vercel.
+
+### Version publicada
 
 ```text
-http://localhost:5500
+https://app-estudiantes-ga22038.vercel.app
 ```
 
 ## Despliegue en Vercel
