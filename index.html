@@ -229,50 +229,43 @@
           </section>
         </main>
 
-        <aside class="workspace-side">
-          <!-- Resumen lateral -->
-          <section class="panel-surface">
-            <div class="panel-head">
-              <div>
-                <h2 class="panel-title">Resumen por carrera</h2>
-                <p class="panel-copy">
-                  Visual rápido del volumen de estudiantes por carrera.
-                </p>
-              </div>
-            </div>
+        <aside class="workspace-side" aria-label="Informacion complementaria">
+          <details class="panel-surface side-disclosure">
+            <summary>
+              <span>
+                <strong>Resumen por carrera</strong>
+                <small>Conteo de estudiantes por carrera</small>
+              </span>
+            </summary>
             <div id="careerBreakdown" class="career-breakdown"></div>
-          </section>
+          </details>
 
-          <section class="panel-surface">
-            <div class="panel-head">
-              <div>
-                <h2 class="panel-title">Última ubicación registrada</h2>
-                <p class="panel-copy">
-                  Se actualiza con el registro más reciente que tenga ubicación.
-                </p>
-              </div>
-            </div>
+          <details class="panel-surface side-disclosure">
+            <summary>
+              <span>
+                <strong>Ultima ubicacion registrada</strong>
+                <small>Registro visible mas reciente con ubicacion</small>
+              </span>
+            </summary>
             <div id="latestLocationCard" class="latest-location-card">
-              Aún no hay ubicaciones registradas.
+              Aun no hay ubicaciones registradas.
             </div>
-          </section>
+          </details>
 
-          <section class="panel-surface">
-            <div class="panel-head">
-              <div>
-                <h2 class="panel-title">Acerca de esta app</h2>
-                <p class="panel-copy">
-                  Información útil del registro y sus datos locales.
-                </p>
-              </div>
-            </div>
+          <details class="panel-surface side-disclosure">
+            <summary>
+              <span>
+                <strong>Acerca de esta app</strong>
+                <small>Notas del almacenamiento local</small>
+              </span>
+            </summary>
             <ul class="requirement-list">
               <li>Los registros se guardan en este navegador.</li>
-              <li>Los filtros y borradores duran solo la sesión actual.</li>
-              <li>Las métricas respetan la vista filtrada.</li>
-              <li>Las ubicaciones se muestran cuando hay coordenadas válidas.</li>
+              <li>Los filtros y borradores duran solo la sesion actual.</li>
+              <li>Las metricas respetan la vista filtrada.</li>
+              <li>Las ubicaciones se muestran cuando hay coordenadas validas.</li>
             </ul>
-          </section>
+          </details>
         </aside>
       </div>
     </div>
